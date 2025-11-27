@@ -1,5 +1,6 @@
 import threading
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set, Tuple
+import string
 from app.db.models import Library, Document, Chunk
 from app.schemas.library import LibraryCreate, LibraryUpdate
 from app.schemas.document import DocumentCreate, DocumentUpdate
@@ -15,6 +16,8 @@ class Database:
         self.lib_num = 0
         self.doc_num = 0
         self.chunk_num = 0
+
+        self.inverted_index: Dict[str, Set[int]] = {}
 
         self.lock = threading.RLock()
 
@@ -66,6 +69,19 @@ class Database:
         with self.lock:
             return [doc for doc in self.documents.values() if doc.library_id == lib_id]
 
+    def _tokenize(self, text: str) -> Set[str]:
+        normalized_text = text.lower().translate(
+            str.maketrans("", "", string.punctuation)
+        )
+        return set(normalized_text.split())
+
+    def _update_inverted_index(self, chunk: Chunk):
+        words = self._tokenize(chunk.text)
+        for word in words:
+            if word not in self.inverted_index:
+                self.inverted_index[word] = set()
+            self.inverted_index[word].add(chunk.id)
+
     def create_chunk(self, chunk: ChunkCreate) -> Chunk:
         with self.lock:
             chunk_doc = self.get_document(chunk.document_id)
@@ -81,6 +97,7 @@ class Database:
             )
             self.chunks[self.chunk_num] = new_chunk
             self.chunk_num += 1
+            self._update_inverted_index(new_chunk)
             return new_chunk
 
     def update_chunk(self, chunk_id: int, chunk: ChunkUpdate) -> Optional[Chunk]:
@@ -109,6 +126,29 @@ class Database:
             return [
                 chunk for chunk in self.chunks.values() if chunk.library_id == lib_id
             ]
+
+    def search_word(self, query: str) -> List[Tuple[Chunk, int]]:
+        with self.lock:
+            query_words = self._tokenize(query)
+            if not query_words:
+                return []
+
+            scores: Dict[int, int] = {}
+
+            for word in query_words:
+                if word in self.inverted_index:
+                    for chunk_id in self.inverted_index[word]:
+                        scores[chunk_id] = scores.get(chunk_id, 0) + 1
+
+            results = []
+
+            for chunk_id, score in scores.items():
+                chunk = self.chunks[chunk_id]
+                results.append((chunk, score))
+
+            results.sort(key=lambda x: x[1], reverse=True)
+
+            return results
 
 
 db = Database()

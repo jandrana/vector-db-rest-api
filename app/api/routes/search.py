@@ -32,5 +32,6 @@ def search_library(
             status_code=status.HTTP_404_NOT_FOUND, detail="Library not found"
         )
 
-    results = search_service.knn_search(db, lib_id, request.query, request.k)
-    return results
+    if request.search_type == "keyword":
+        return search_service.search_keyword(db, request.query, request.k)
+    return search_service.knn_search(db, lib_id, request.query, request.k)

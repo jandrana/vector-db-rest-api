@@ -8,8 +8,11 @@ cohere_client = cohere.Client(settings.COHERE_API_KEY)
 
 
 def knn_search(db: Database, lib_id: int, query: str, k: int = 3):
-    query_embedding = generate_embeddings([query], input_type="search_query")[0]
+    query_embedding = generate_embeddings([query], input_type="search_query")
+    if not query_embedding:
+        return []
 
+    query_embedding = query_embedding[0]
     lib_chunks = db.get_chunks_by_library(lib_id)
 
     results = []
@@ -22,3 +25,14 @@ def knn_search(db: Database, lib_id: int, query: str, k: int = 3):
 
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:k]
+
+
+def search_keyword(db: Database, query: str, k: int):
+    chunks = db.search_word(query)
+
+    results = chunks[:k]
+
+    final_results = []
+    for chunk, score in results:
+        final_results.append({"chunk": chunk, "score": float(score)})
+    return final_results
