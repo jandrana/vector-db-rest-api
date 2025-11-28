@@ -4,16 +4,19 @@ CONTAINER = vector-db-container
 .PHONY: help install run build up stop clean
 
 help:
-	@echo "Build locally:"
-	@echo "1. make install:	Install dependencies"
-	@echo "2. make run:		Run the application locally"
-	@echo "		Access: 	http://localhost:8000"
-	@echo "Build and run with Docker"
-	@echo "1. make build:	Build the Docker image"
-	@echo "2. make up:		Run the Docker container"
-	@echo "		Access: 	http://localhost:8000"
-	@echo "6. make stop:	Stop the Docker container"
-	@echo "7. make clean:	Clean up the project"
+	@echo "======================================================================"
+	@echo "   VECTOR SEARCH API - COMMANDS"
+	@echo "======================================================================"
+	@echo "LOCAL DEV:"
+	@echo "  make install   : Install Python dependencies"
+	@echo "  make run       : Run the app locally (http://localhost:8000)"
+	@echo ""
+	@echo "DOCKER:"
+	@echo "  make build     : Build the Docker image"
+	@echo "  make up        : Run the container with persistence"
+	@echo "  make stop      : Stop the running container"
+	@echo "  make clean     : Stop container, delete container, delete image"
+	@echo "======================================================================"
 
 install:
 	pip install --no-cache-dir --upgrade -r requirements.txt
@@ -28,13 +31,19 @@ build:
 	@echo "Docker image built."
 
 up:
-	docker run --rm -p 8000:8000 --env-file .env --name $(CONTAINER) $(IMAGE)
-	@echo "Docker container running on http://localhost:8000"
+	@echo "Ensuring database file exists for persistence"
+	@python -c "import os; open('vector_db.jsonl', 'a').close()"
+	@echo "Starting Docker container..."
+	docker run -p 8000:8000 -v "$(CURDIR)/vector_db.jsonl:/app/vector_db.jsonl" --env-file .env --name $(CONTAINER) $(IMAGE)
+	@echo "You can access the API at http://localhost:8000/docs"
 
 stop:
 	docker stop $(CONTAINER)
 	@echo "Docker container stopped"
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	@echo "Cache cleaned"
+	@echo "Cleaning up Docker environment..."
+	docker stop $(CONTAINER)
+	docker rm $(CONTAINER)
+	docker rmi $(IMAGE)
+	@echo "Cleaned up Docker environment (Image && Container removed)"
