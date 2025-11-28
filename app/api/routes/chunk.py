@@ -25,12 +25,7 @@ def get_chunk(chunk_id: int, db: Database = Depends(deps.get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found"
         )
 
-    return {
-        "id": chunk.id,
-        "text": chunk.text,
-        "document_id": chunk.document_id,
-        "library_id": chunk.library_id,
-    }
+    return chunk
 
 
 @router.patch("/{chunk_id}", response_model=ChunkDetail, status_code=status.HTTP_200_OK)
