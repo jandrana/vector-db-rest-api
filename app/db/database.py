@@ -1,13 +1,11 @@
 import threading
-import json
-import os
-import string
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Any, Tuple
 from app.db.models import Library, Document, Chunk
 from app.schemas.library import LibraryCreate, LibraryUpdate
 from app.schemas.document import DocumentCreate, DocumentUpdate
 from app.schemas.chunk import ChunkCreate, ChunkUpdate
-
+from app.db.inverted_index import InvertedIndex
+from app.db.persistence import Persistence
 
 DB_FILE = "vector_db.jsonl"
 
@@ -18,17 +16,20 @@ class Database:
         self.documents: Dict[int, Document] = {}
         self.chunks: Dict[int, Chunk] = {}
 
+        self.inverted_index = InvertedIndex()
+        self.persistence = Persistence()
+        self.lock = threading.RLock()
+
         self.lib_num = 0
         self.doc_num = 0
         self.chunk_num = 0
 
-        self.inverted_index: Dict[str, Set[int]] = {}
-
-        self.lock = threading.RLock()
-        self.db_file = DB_FILE
         self.is_loading = False
+        self._load_db()
 
-        self._load_handler = {
+    def _load_db(self):
+        self.is_loading = True
+        actions = {
             "create_library": lambda data: self.create_library(
                 LibraryCreate(**data), disk_id=data["id"]
             ),
@@ -48,44 +49,22 @@ class Database:
                 data["id"], ChunkUpdate(**data)
             ),
         }
-
-        self._load_db()
-
-    def _save_action(self, action: str, data: Dict):
-        if self.is_loading:
-            return
-        log = {"action": action, "data": data}
-        with open(self.db_file, "a") as f:
-            f.write(json.dumps(log) + "\n")
-
-    def _load_db(self):
-        if not os.path.exists(DB_FILE):
-            return
-        self.is_loading = True
         try:
-            with open(DB_FILE, "r") as f:
-                for line in f:
-                    if not line.strip():
-                        continue
-                    try:
-                        log = json.loads(line)
-                        action = log["action"]
-                        data = log["data"]
-                        handler = self._load_handler.get(action)
-                        if handler:
-                            handler(data)
-                        else:
-                            print(f"Unknown action: {action}")
-                    except Exception as e:
-                        print(f"Skipping invalid log: {e}")
-            print(
-                f"Database loaded successfully from {DB_FILE} with {len(self.chunks)} chunks"
-            )
+            for action, data in self.persistence.load_actions():
+                handler = actions.get(action)
+                if handler:
+                    handler(data)
+            print(f"Database loaded successfully with {len(self.chunks)} chunks")
         except Exception as e:
             print(f"Error loading database: {e}")
         finally:
             self.is_loading = False
 
+    def _persist(self, action: str, data: Dict[str, Any]):
+        if not self.is_loading:
+            self.persistence.save_action(action, data)
+
+    # --- LIBRARY ---
     def create_library(self, library: LibraryCreate, disk_id: int = None) -> Library:
         with self.lock:
             lib_id = disk_id if disk_id is not None else self.lib_num
@@ -95,7 +74,7 @@ class Database:
                 self.lib_num = lib_id + 1
             data = library.model_dump()
             data["id"] = lib_id
-            self._save_action("create_library", data)
+            self._persist("create_library", data)
             return new_library
 
     def update_library(self, lib_id: int, library: LibraryUpdate) -> Optional[Library]:
@@ -107,13 +86,14 @@ class Database:
                 updated_lib.name = library.name
                 data = library.model_dump()
                 data["id"] = lib_id
-                self._save_action("update_library", data)
+                self._persist("update_library", data)
             return updated_lib
 
     def get_library(self, lib_id: int) -> Library:
         with self.lock:
             return self.libraries.get(lib_id)
 
+    # --- DOCUMENT ---
     def create_document(
         self, document: DocumentCreate, disk_id: int = None
     ) -> Document:
@@ -128,7 +108,7 @@ class Database:
 
             data = document.model_dump()
             data["id"] = doc_id
-            self._save_action("create_document", data)
+            self._persist("create_document", data)
             return new_document
 
     def update_document(
@@ -142,7 +122,7 @@ class Database:
                 updated_doc.name = document.name
                 data = document.model_dump()
                 data["id"] = doc_id
-                self._save_action("update_document", data)
+                self._persist("update_document", data)
             return updated_doc
 
     def get_document(self, doc_id: int) -> Document:
@@ -153,19 +133,7 @@ class Database:
         with self.lock:
             return [doc for doc in self.documents.values() if doc.library_id == lib_id]
 
-    def _tokenize(self, text: str) -> Set[str]:
-        normalized_text = text.lower().translate(
-            str.maketrans("", "", string.punctuation)
-        )
-        return set(normalized_text.split())
-
-    def _update_inverted_index(self, chunk: Chunk):
-        words = self._tokenize(chunk.text)
-        for word in words:
-            if word not in self.inverted_index:
-                self.inverted_index[word] = set()
-            self.inverted_index[word].add(chunk.id)
-
+    # --- CHUNK ---
     def create_chunk(self, chunk: ChunkCreate, disk_id: int = None) -> Chunk:
         with self.lock:
             if not self.is_loading:
@@ -189,10 +157,10 @@ class Database:
             self.chunks[chunk_id] = new_chunk
             if chunk_id >= self.chunk_num:
                 self.chunk_num = chunk_id + 1
-            self._update_inverted_index(new_chunk)
+            self.inverted_index.index_chunk(chunk_id, new_chunk.text)
             data = chunk.model_dump()
             data["id"] = chunk_id
-            self._save_action("create_chunk", data)
+            self._persist("create_chunk", data)
             return new_chunk
 
     def update_chunk(self, chunk_id: int, chunk: ChunkUpdate) -> Optional[Chunk]:
@@ -231,27 +199,17 @@ class Database:
                 chunk for chunk in self.chunks.values() if chunk.library_id == lib_id
             ]
 
+    # --- SEARCH ---
     def search_word(self, query: str) -> List[Tuple[Chunk, int]]:
         with self.lock:
-            query_words = self._tokenize(query)
-            if not query_words:
-                return []
-
-            scores: Dict[int, int] = {}
-
-            for word in query_words:
-                if word in self.inverted_index:
-                    for chunk_id in self.inverted_index[word]:
-                        scores[chunk_id] = scores.get(chunk_id, 0) + 1
+            scores = self.inverted_index.search_word(query)
 
             results = []
-
             for chunk_id, score in scores.items():
                 chunk = self.chunks[chunk_id]
                 results.append((chunk, score))
 
             results.sort(key=lambda x: x[1], reverse=True)
-
             return results
 
 
