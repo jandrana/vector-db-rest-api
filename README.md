@@ -17,21 +17,32 @@ It allows users to create libraries, upload text documents, and perform both Sem
 Following a Domain Driven Design inspired structure, separating the code in different logical layers.
 
 ```text
-app/
-├── api/
-│   ├── routes/
-│   └── deps.py
-├── core/
-│   ├── config.py
-│   └── math_utils.py
-├── db/
-│   ├── database.py
-│   └── models.py
-├── schemas/
-├── services/
-│   ├── index_service.py
-│   └── search_service.py
-└── main.py
+vector-db-rest-api/
+├── app/
+│   ├── api/                  # 🗣️ Interface
+│   │   ├── routes/           # API Endpoints
+│   │   └── deps.py           # Dependency Injection (get_db)
+│   ├── core/                 # ⚙️ Core Utilities
+│   │   ├── config.py         # Environment Configuration
+│   │   └── math_utils.py     # Cosine Similarity Logic
+│   ├── db/                   # 💾 Data Layer
+│   │   ├── database.py       # Main Database Controller (Thread-safe)
+│   │   ├── inverted_index.py # Keyword Search Algorithm Logic
+│   │   ├── persistence.py    # Append-Only Log Logic (File I/O)
+│   │   └── models.py         # Internal Data Models
+│   ├── schemas/              # 📋 Data Transfer Objects (DTOs)
+│   │   └── ...               # Pydantic Schemas for Validation
+│   ├── services/             # 🧠 Business Logic Layer
+│   │   ├── index_service.py  # Cohere Embedding Integration
+│   │   └── search_service.py # Search Orchestration
+│   └── main.py               # 🏁 Application Entry Point
+├── client/                   # 📦 Python SDK Client
+│   ├── sdk.py                # Reusable API Client Library
+│   └── example.py            # SDK Usage Demo Script
+├── tests/                    # 🧪 Integration Tests
+├── Makefile                  # 🛠️ Automation Commands
+├── Dockerfile                # 🐳 Docker Configuration
+└── requirements.txt          # 🐍 Dependencies
 ```
 
 ## 🛠️ Quick Start
