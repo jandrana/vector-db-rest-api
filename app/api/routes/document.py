@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
+from typing import List
 
 from app.schemas.document import (
     DocumentCreate,
@@ -42,6 +43,11 @@ def get_document(document_id: int, db: Database = Depends(deps.get_db)):
     }
 
 
+@router.get("/", response_model=List[DocumentResponse], status_code=status.HTTP_200_OK)
+def get_all_documents(db: Database = Depends(deps.get_db)):
+    return list(db.documents.values())
+
+
 @router.patch(
     "/{document_id}", response_model=DocumentResponse, status_code=status.HTTP_200_OK
 )
@@ -54,3 +60,13 @@ def update_document(
             status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
         )
     return updated_doc
+
+
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_document(document_id: int, db: Database = Depends(deps.get_db)):
+    res = db.delete_document(document_id)
+    if res == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
+    return None
