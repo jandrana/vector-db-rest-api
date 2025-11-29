@@ -30,10 +30,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        544,
-        16
+        576,
+        264
       ],
-      "id": "98d942d7-51c3-49e7-b427-f59cbf359d92",
+      "id": "462d9aa6-1bb1-4a15-91f0-e7d8e34fc4e5",
       "name": "Edit Fields"
     },
     {
@@ -44,10 +44,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        736,
-        16
+        800,
+        264
       ],
-      "id": "aae247b5-fad6-4a33-ad55-4f3a3fbf7184",
+      "id": "5cb9f3b6-521e-48ae-ac63-ec10e0211753",
       "name": "HTTP Request"
     },
     {
@@ -62,10 +62,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        944,
-        16
+        1024,
+        264
       ],
-      "id": "060c7810-64c1-4d72-9a4e-fa093e7dd97f",
+      "id": "aff208f6-e20d-461d-9eb9-83ab577e9cf5",
       "name": "HTTP Request1"
     },
     {
@@ -85,10 +85,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1152,
-        16
+        1248,
+        264
       ],
-      "id": "9576989a-b90d-4e99-88fc-c001b5fe892e",
+      "id": "e311ace1-460f-4b60-816b-fcce387b234b",
       "name": "split_chunks"
     },
     {
@@ -99,10 +99,10 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        1360,
-        16
+        1472,
+        264
       ],
-      "id": "c263e4f7-3201-4a9b-b096-19dd86e8b748",
+      "id": "58ad465f-039e-4760-a209-04fa366aee61",
       "name": "Split Out"
     },
     {
@@ -127,10 +127,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1568,
-        16
+        1696,
+        264
       ],
-      "id": "d7c038dc-aac7-4368-9859-e3aed1995497",
+      "id": "7e81021a-0e7b-430d-8a2a-73234d563ba3",
       "name": "HTTP Request2"
     },
     {
@@ -141,9 +141,9 @@
       "typeVersion": 1.4,
       "position": [
         0,
-        0
+        264
       ],
-      "id": "1b6643ed-f1fb-432e-aa83-a85304355ee0",
+      "id": "863814aa-8160-4303-85ae-1be170a4a94b",
       "name": "When chat message received",
       "webhookId": "448d8a0e-45b2-468a-92d7-e1f6850fdf45"
     },
@@ -158,9 +158,9 @@
       "typeVersion": 3,
       "position": [
         224,
-        0
+        264
       ],
-      "id": "9d97ee1a-3aaa-4c24-b67f-2552d4fa1790",
+      "id": "ba9f21a9-7fa0-4dae-9f55-bfe15ec7d7e1",
       "name": "AI Agent"
     },
     {
@@ -172,14 +172,14 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        144,
-        192
+        232,
+        488
       ],
-      "id": "c8c7eaf9-29da-4d3f-9e8d-acbf3001b733",
+      "id": "7aa55a97-1635-4a93-a039-6f34d2553f7e",
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
-          "id": "lKId37HVA0mrnNWx",
+          "id": "JUsFROHQWLeI13jA",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
@@ -191,11 +191,55 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        432,
-        192
+        360,
+        488
       ],
-      "id": "ce794d38-e173-449a-bccf-68c703ca4a85",
+      "id": "9d8ec96e-34d2-4007-ba0e-d59e7040108a",
       "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/libraries",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"name\": \"Library created from n8n\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        -64
+      ],
+      "id": "52fda652-e406-43ac-8b82-ef96b5edf96e",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "content": "# 🤖 AI Agent: Content Generator & Ingester\n\n**What this workflow does:**\nThis is an **Agentic RAG Pipeline**. It takes a natural language command, generates content using AI, and automatically structures and ingests it into the Vector Database.\n\n**🛠️ Setup Required:**\n1. Double-click the **Google Gemini Chat Model** node.\n2. Select your API Credential (or create a new one with your API Key).\n\n### Avalable Triggers\n\n**Create a Library Button**\n - Automatically create a new library from n8n using the \"Create Library\" Button.\n\n\n\n**AI Content Generator Agent**\nAsk the AI agent to create a document about any topic in a given library id.\n\n1. Click the **Chat** button at the bottom of the screen.\n2. Type a command like:\n   > *\"Create a document about the history of the Internet.\"*\n   > *\"Create a document in Library 2 explaining how black holes work.\"*\n\n ⚠ You need at least 1 library to create a document. If you dont have one. Use the \"Create library button to create it automatically\"\n\n",
+        "height": 816,
+        "width": 464
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -544,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "18ec0b7b-b4af-4a0c-a6dc-6a9e5724996b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -64
+      ],
+      "id": "6c34d1a7-2c0d-4d22-b421-36202029999a",
+      "name": "When clicking ‘Create Library’"
     }
   ],
   "pinData": {},
@@ -298,17 +342,28 @@
           }
         ]
       ]
+    },
+    "When clicking ‘Create Library’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "4c463fb5-40a3-4d4b-bc92-7a70b5e1a699",
+  "versionId": "384d899d-90c4-40b7-aa0c-f40317998e56",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "76cd901fd36a436a170b2bfc422951d0d3bd5f4e60b5241a5e16a85f3b6366cf"
+    "instanceId": "410fe99fb50f1ea6130ff15f59fb32a4f3746773534587f72da8b7d4a90f0fe3"
   },
-  "id": "G70TFuqlXoDI6c6P",
+  "id": "F9HFRqzxG8AzEeQV",
   "tags": []
 }
