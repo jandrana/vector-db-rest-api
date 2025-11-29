@@ -120,7 +120,7 @@ To avoid data races between reads and writes to the database, the `Database` cla
 ## 🤖 n8n AI Agent (Bonus)
 
 I implemented an **Agentic Ingestion Pipeline** using n8n and Google Gemini.
-*   **Workflow:** The user asks a natural language question (e.g., "Create a document in Library 1 about why Python is great for AI"). The AI generates the content, structures it into JSON, chunks it, and uploads it to the Vector DB via the API.
+*   **Workflow:** The user asks the agent in natural language to create a document about a topic in a given library (e.g., "Create a document in Library 1 about why Python is great for AI"). The AI generates the content, structures it into JSON, divides the document content in chunks, and uploads it to the Vector DB via the API.
 
 ### How to Import:
 1.  Run `make up`.
