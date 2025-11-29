@@ -48,6 +48,9 @@ class Database:
             "update_chunk": lambda data: self.update_chunk(
                 data["id"], ChunkUpdate(**data)
             ),
+            "delete_library": lambda data: self.delete_library(data["id"]),
+            "delete_document": lambda data: self.delete_document(data["id"]),
+            "delete_chunk": lambda data: self.delete_chunk(data["id"]),
         }
         try:
             for action, data in self.persistence.load_actions():
@@ -93,6 +96,18 @@ class Database:
         with self.lock:
             return self.libraries.get(lib_id)
 
+    def delete_library(self, lib_id: int):
+        with self.lock:
+            if lib_id not in self.libraries:
+                return 0
+            docs = self.get_documents_by_library(lib_id)
+            for doc in docs:
+                self.delete_document(doc.id)
+            
+            del self.libraries[lib_id]
+            self._persist("delete_library", {"id": lib_id})
+            return 1
+
     # --- DOCUMENT ---
     def create_document(
         self, document: DocumentCreate, disk_id: int = None
@@ -132,6 +147,17 @@ class Database:
     def get_documents_by_library(self, lib_id: int) -> List[Document]:
         with self.lock:
             return [doc for doc in self.documents.values() if doc.library_id == lib_id]
+    
+    def delete_document(self, doc_id: int):
+        with self.lock:
+            if doc_id not in self.documents:
+                return 0
+            chunks = self.get_chunks_by_document(doc_id)
+            for chunk in chunks:
+                self.delete_chunk(chunk.id)
+            del self.documents[doc_id]
+            self._persist("delete_document", {"id": doc_id})
+            return 1
 
     # --- CHUNK ---
     def create_chunk(self, chunk: ChunkCreate, disk_id: int = None) -> Chunk:
@@ -198,6 +224,15 @@ class Database:
             return [
                 chunk for chunk in self.chunks.values() if chunk.library_id == lib_id
             ]
+    
+    def delete_chunk(self, chunk_id: int):
+        with self.lock:
+            if chunk_id not in self.chunks:
+                return 0
+            self.inverted_index.remove_chunk(chunk_id, self.chunks[chunk_id].text)
+            del self.chunks[chunk_id]
+            self._persist("delete_chunk", {"id": chunk_id})
+            return 1
 
     # --- SEARCH ---
     def search_word(self, query: str) -> List[Tuple[Chunk, int]]:

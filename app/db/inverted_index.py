@@ -19,6 +19,14 @@ class InvertedIndex:
                 self.index[word] = set()
             self.index[word].add(chunk_id)
 
+    def remove_chunk(self, chunk_id: int, text: str):
+        words = self._tokenize(text)
+        for word in words:
+            if word in self.index:
+                self.index[word].discard(chunk_id)
+                if not self.index[word]:
+                    del self.index[word]
+
     def search_word(self, query: str) -> Dict[int, int]:
         query_words = self._tokenize(query)
         if not query_words:

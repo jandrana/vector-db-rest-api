@@ -50,3 +50,13 @@ def update_library(
             status_code=status.HTTP_404_NOT_FOUND, detail="Library not found"
         )
     return updated_lib
+
+
+@router.delete("/{library_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_library(library_id: int, db: Database = Depends(deps.get_db)):
+    res = db.delete_library(library_id)
+    if res == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Library not found"
+        )
+    return None

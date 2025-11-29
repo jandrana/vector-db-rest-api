@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from app.schemas.document import DocumentBase
+from app.schemas.document import DocumentResponse
 
 
 class LibraryBase(BaseModel):
@@ -20,6 +20,6 @@ class LibraryResponse(LibraryBase):
 
 
 class LibraryDetail(LibraryBase):
-    documents: List[DocumentBase] = Field(
+    documents: List[DocumentResponse] = Field(
         ..., description="List of documents in the library"
     )

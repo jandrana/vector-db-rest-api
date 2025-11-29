@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-
+from typing import List
 from app.schemas.chunk import ChunkCreate, ChunkUpdate, ChunkResponse, ChunkDetail
 from app.api import deps
 from app.db.database import Database
@@ -28,6 +28,11 @@ def get_chunk(chunk_id: int, db: Database = Depends(deps.get_db)):
     return chunk
 
 
+@router.get("/", response_model=List[ChunkResponse], status_code=status.HTTP_200_OK)
+def get_all_chunks(db: Database = Depends(deps.get_db)):
+    return list(db.chunks.values())
+
+
 @router.patch("/{chunk_id}", response_model=ChunkDetail, status_code=status.HTTP_200_OK)
 def update_chunk(
     chunk_id: int, chunk: ChunkUpdate, db: Database = Depends(deps.get_db)
@@ -38,3 +43,13 @@ def update_chunk(
             status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found"
         )
     return updated_chunk
+
+
+@router.delete("/{chunk_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_chunk(chunk_id: int, db: Database = Depends(deps.get_db)):
+    res = db.delete_chunk(chunk_id)
+    if res == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found"
+        )
+    return None
