@@ -8,19 +8,19 @@
             {
               "id": "199f440f-d074-4c84-b322-eb02d2afe036",
               "name": "library_id",
-              "value": 0,
+              "value": "={{ $json.output.library_id }}",
               "type": "number"
             },
             {
               "id": "480628f6-e778-4153-9d1a-e780073368fe",
               "name": "doc_name",
-              "value": "Artificial Intelligence",
+              "value": "={{ $json.output.title }}",
               "type": "string"
             },
             {
               "id": "fc0bcb25-3b8d-41e8-9722-3a4b2501bf67",
               "name": "full_text",
-              "value": "AI holds the potential to address complex challenges from enhancing education and improving health care, to driving scientific innovation and climate action. However, AI systems also pose risks to privacy, safety, security, and human autonomy. Effective governance is essential to ensure AI development and deployment are safe, secure and trustworthy, with policies and regulation that foster innovation and competition.",
+              "value": "={{ $json.output.full_text }}",
               "type": "string"
             }
           ]
@@ -30,10 +30,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        400,
-        0
+        544,
+        16
       ],
-      "id": "c62ffa49-1895-4bf1-89ce-c0595afc6b8c",
+      "id": "98d942d7-51c3-49e7-b427-f59cbf359d92",
       "name": "Edit Fields"
     },
     {
@@ -44,10 +44,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        592,
-        0
+        736,
+        16
       ],
-      "id": "21e3a082-cbeb-435a-b008-46d25c08ff3a",
+      "id": "aae247b5-fad6-4a33-ad55-4f3a3fbf7184",
       "name": "HTTP Request"
     },
     {
@@ -62,10 +62,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        800,
-        0
+        944,
+        16
       ],
-      "id": "6f76e13a-6c6f-442e-8f32-3f4f457cc868",
+      "id": "060c7810-64c1-4d72-9a4e-fa093e7dd97f",
       "name": "HTTP Request1"
     },
     {
@@ -85,10 +85,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1008,
-        0
+        1152,
+        16
       ],
-      "id": "c99d1606-076a-4cce-81a9-345904b3772e",
+      "id": "9576989a-b90d-4e99-88fc-c001b5fe892e",
       "name": "split_chunks"
     },
     {
@@ -99,10 +99,10 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        1216,
-        0
+        1360,
+        16
       ],
-      "id": "68cc3899-e953-4ca4-8483-3220af9c8e15",
+      "id": "c263e4f7-3201-4a9b-b096-19dd86e8b748",
       "name": "Split Out"
     },
     {
@@ -127,10 +127,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1424,
-        0
+        1568,
+        16
       ],
-      "id": "db688921-b9b3-4017-ac7e-bfd0cb2b5fe4",
+      "id": "d7c038dc-aac7-4368-9859-e3aed1995497",
       "name": "HTTP Request2"
     },
     {
@@ -140,27 +140,27 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -144,
-        -16
+        0,
+        0
       ],
-      "id": "08b15d12-6a41-47e9-8dae-1cb9ee788ffc",
+      "id": "1b6643ed-f1fb-432e-aa83-a85304355ee0",
       "name": "When chat message received",
       "webhookId": "448d8a0e-45b2-468a-92d7-e1f6850fdf45"
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "You are a Content Generator for a Vector Database.\nUser will ask you to create a document in a specific library about a topic.\n\n1. Extract the 'library_id' (integer).\n2. Generate a 'title' for the document.\n3. Write the 'full_text'. \n   ⚠️ CRITICAL: The 'full_text' MUST be less than 100 words. Keep it concise.\n\nYou MUST reply with ONLY valid JSON.\nFormat:\n{\n  \"library_id\": 1,\n  \"title\": \"Example Title\",\n  \"full_text\": \"Short content goes here...\"\n}",
+        "text": "=You are a Content Generator for a Vector Database.\nUser will ask you to create a document in a specific library about the topic that the user says.\n\n1. Extract the 'library_id' (integer).\n  IMPORTANT: if the user does not specify a library_id, use 0 as default.\n2. Generate a 'title' for the document.\n3. Write the 'full_text'. \n   ⚠️ CRITICAL: The 'full_text' MUST be less than 100 words. Keep it concise.\n\nYou MUST reply with ONLY valid JSON.\nFormat:\n{\n  \"library_id\": 1,\n  \"title\": \"Example Title\",\n  \"full_text\": \"Short content goes here...\"\n} {{ $json.chatInput }}",
         "hasOutputParser": true,
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        80,
-        -16
+        224,
+        0
       ],
-      "id": "7afd757a-2a39-4d3a-90aa-89ec252ab49b",
+      "id": "9d97ee1a-3aaa-4c24-b67f-2552d4fa1790",
       "name": "AI Agent"
     },
     {
@@ -172,14 +172,14 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        0,
-        176
+        144,
+        192
       ],
-      "id": "1fe358b8-8b47-42dd-88b8-02757b38a54f",
+      "id": "c8c7eaf9-29da-4d3f-9e8d-acbf3001b733",
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
-          "id": "Kug4BKn0rtSQWBVD",
+          "id": "lKId37HVA0mrnNWx",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
@@ -191,10 +191,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        288,
-        176
+        432,
+        192
       ],
-      "id": "1a902f4b-4d7b-4c77-b380-6b3d167c43ba",
+      "id": "ce794d38-e173-449a-bccf-68c703ca4a85",
       "name": "Structured Output Parser"
     }
   ],
@@ -304,11 +304,11 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "873d7d46-984e-4892-903c-f37470796c12",
+  "versionId": "4c463fb5-40a3-4d4b-bc92-7a70b5e1a699",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "97553f3eeeedda6d249db98a39122bfa63b395d19388bcff4957d57b9efa5fde"
+    "instanceId": "76cd901fd36a436a170b2bfc422951d0d3bd5f4e60b5241a5e16a85f3b6366cf"
   },
-  "id": "28Isk6nNnzqEeGf9",
+  "id": "G70TFuqlXoDI6c6P",
   "tags": []
 }
