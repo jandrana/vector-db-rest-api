@@ -117,6 +117,26 @@ Interact directly with every endpoint directly from the browser.
 ### 3. Concurrency & Data Safety
 To avoid data races between reads and writes to the database, the `Database` class is implemented thread-safe by using **`threading.RLock()`** which allows nested method calls without causing a deadlock.
 
+## 🤖 n8n AI Agent (Bonus)
+
+I implemented an **Agentic Ingestion Pipeline** using n8n and Google Gemini.
+*   **Workflow:** The user asks a natural language question (e.g., "Create a document in Library 1 about why Python is great for AI"). The AI generates the content, structures it into JSON, chunks it, and uploads it to the Vector DB via the API.
+
+### How to Import:
+1.  Run `make up`.
+2.  Open [http://localhost:5678](http://localhost:5678).
+3.  **Setup Credentials:**
+    *   Go to **Credentials** -> **Add Credential**.
+    *   Search for **Google Gemini (PaLM) API**.
+    *   Enter your API Key (or use OpenAI if you prefer, switching the model node).
+4.  **Import Workflow:**
+    *   Click **Add Workflow** -> **Import from File**.
+    *   Select `workflows/ai_agent_ingestion_pipeline.json`.
+5.  **Connect Credential:**
+    *   Double click the **Google Gemini Chat Model** node.
+    *   Select the Credential you just created.
+6.  **Run:** Click "Chat" and ask it to create a document!
+
 ## 💾 Persistence to Disk (Bonus)
 
 To ensure data durability across container restarts, I implemented an **Append-Only Log (AOL)** persistence mechanism for the In-Memory Database.
@@ -127,8 +147,9 @@ To ensure data durability across container restarts, I implemented an **Append-O
 *   **Recovery:** On startup, the system reads the log file line-by-line and "replays" the events to rebuild the in-memory state.
 
 ### Tradeoffs
-*   **Pros:** High write performance, human-readable data format, crash recovery.
+*   **Pros:** $O(1)$ write performance, human-readable data format, crash recovery and easy data recovery.
 *   **Cons:** Startup time grows linearly with the number of historical operations (since the whole log must be replayed).
+*   **Solution:** I would implement a Log Cleaning system to periodically rewrite the log to remove "old" records (cancelled creates because of later deletes) to save disk space and optimize startup time.
 
 ## 📦 Python SDK Client (Bonus)
 
