@@ -1,0 +1,4 @@
+-r requirements.txt
+pre-commit>=3.4
+pytest>=7.0
+ruff>=0.12.0
