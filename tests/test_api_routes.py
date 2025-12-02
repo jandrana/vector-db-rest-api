@@ -1,6 +1,3 @@
-import json
-
-
 def test_full_api_flow(client):
 	# create library
 	create_library = client.post("/libraries", json={"name": "lib1"})
@@ -16,6 +13,8 @@ def test_full_api_flow(client):
 	create_chunk = client.post("/chunks", json={"text": "hello world", "document_id": doc["id"]})
 	assert create_chunk.status_code == 201
 	chunk = create_chunk.json()
+	assert chunk["text"] == "hello world"
+	assert chunk["document_id"] == doc["id"]
 
 	# index library
 	index_lib = client.post(f"/libraries/{lib['id']}/index")

@@ -9,7 +9,7 @@ def test_search_keyword_and_knn(monkeypatch, test_db):
     lib = test_db.create_library(LibraryCreate(name="lib1"))
     doc = test_db.create_document(DocumentCreate(name="doc1", library_id=lib.id))
     c1 = test_db.create_chunk(ChunkCreate(text="apple banana", document_id=doc.id, embedding=[1.0, 0.0]))
-    c2 = test_db.create_chunk(ChunkCreate(text="banana cherry", document_id=doc.id, embedding=[0.0, 1.0]))
+    test_db.create_chunk(ChunkCreate(text="banana cherry", document_id=doc.id, embedding=[0.0, 1.0]))
 
     # keyword search
     kres = search_service.search_keyword(test_db, "apple", k=2)

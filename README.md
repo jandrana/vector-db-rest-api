@@ -131,7 +131,7 @@ make test	# uses .venv if available
 python -m pytest
 ```
 
-- This repo runs tests locally using `pytest` via a `pre-push` hook from `pre-commit` and in CI (GitHub Actions). Hooks are installed when runnning `make install-dev` or do it manually using `pre-commit install -t pre-push`.
+- This repo runs tests locally using `pytest` via a `pre-push` hook from `pre-commit` and in CI (GitHub Actions). Hooks are installed when running `make install-dev` or do it manually using `pre-commit install -t pre-push`.
 
 ### CI and pre-push hook
 - CI runs the tests on push and pull requests.

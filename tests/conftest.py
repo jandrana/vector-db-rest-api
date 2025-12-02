@@ -30,7 +30,7 @@ class DummyPersistence:
         return []
 
 
-@pytest.fixture
+def test_db():
 def test_db(tmp_path):
     """Fresh Database instance for testing without persistence."""
     db = Database()
@@ -57,7 +57,7 @@ def stub_embeddings(monkeypatch):
     yield
 
 
-@pytest.fixture
+def client(test_db):
 def client(test_db, monkeypatch):
 
     app.dependency_overrides[get_db] = lambda: test_db

@@ -8,8 +8,8 @@ def test_index_library_assigns_embeddings(test_db):
     # create library, document and chunks
     lib = test_db.create_library(LibraryCreate(name="lib1"))
     doc = test_db.create_document(DocumentCreate(name="doc1", library_id=lib.id))
-    c1 = test_db.create_chunk(ChunkCreate(text="a", document_id=doc.id, embedding=None))
-    c2 = test_db.create_chunk(ChunkCreate(text="b", document_id=doc.id, embedding=None))
+    test_db.create_chunk(ChunkCreate(text="a", document_id=doc.id, embedding=None))
+    test_db.create_chunk(ChunkCreate(text="b", document_id=doc.id, embedding=None))
 
     res = index_service.index_library(test_db, lib.id)
     assert res["status"] == "success"
