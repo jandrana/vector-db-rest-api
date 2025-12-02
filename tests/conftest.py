@@ -42,11 +42,8 @@ def test_db(tmp_path):
     db.lib_num = db.doc_num = db.chunk_num = 0
     db.is_loading = False
 
-    if not hasattr(db, "_save_action"):
-        db._save_action = db.persistence.save_action
 
     return db
-
 
 @pytest.fixture(autouse=True)
 def stub_embeddings(monkeypatch):
