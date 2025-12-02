@@ -201,10 +201,7 @@ class Database:
                 old_text = updated_chunk.text
                 updated_chunk.text = chunk.text
                 data["text"] = chunk.text
-                try:
-                    self.inverted_index.remove_chunk(chunk_id, old_text)
-                except Exception:
-                    pass
+                self.inverted_index.remove_chunk(chunk_id, old_text)
                 self.inverted_index.index_chunk(chunk_id, updated_chunk.text)
                 changed = True
             if chunk.embedding is not None:
