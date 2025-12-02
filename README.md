@@ -93,6 +93,50 @@ vector-db-rest-api/
 Once running, visit: **[http://localhost:8000/docs](http://localhost:8000/docs)**
 Interact directly with every endpoint directly from the browser.
 
+### 🧑‍💻 Developer Setup
+
+#### Using Makefile
+
+1. Create and activate Virtual Environment:
+
+```bash
+make venv
+# Windows
+.venv\Scripts\activate
+# Mac/Linux
+source .venv/bin/activate
+
+```
+
+2. Install dependencies:
+```bash
+make install	# installs dependencies
+make install-dev # installs dev dependencies and pre-commit hooks
+```
+
+#### Manual Steps
+
+Install production and developer dependencies
+```powershell
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
+pre-commit install -t pre-push
+```
+
+### Running Tests
+Run tests with:
+```bash
+make test	# uses .venv if available
+# or
+python -m pytest
+```
+
+- This repo runs tests locally using `pytest` via a `pre-push` hook from `pre-commit` and in CI (GitHub Actions). Hooks are installed when runnning `make install-dev` or do it manually using `pre-commit install -t pre-push`.
+
+### CI and pre-push hook
+- CI runs the tests on push and pull requests.
+- Local pre-push hook runs pytest before pushing; Users can bypass it with `git push --no-verify` if needed but CI will block any issues.
+
 ## 🧠 Challenge Approach: Algorithms & Complexity
 
 ### 1. Vector Search Algorithm (Semantic)
