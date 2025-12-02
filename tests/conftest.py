@@ -1,0 +1,57 @@
+import pytest
+
+from fastapi.testclient import TestClient
+
+from app.main import app
+from app.db.database import Database
+from app.db.inverted_index import InvertedIndex
+from app.services import index_service
+from app.services import search_service
+
+
+class DummyPersistence:
+    def __init__(self):
+        self.actions = []
+
+    def save_action(self, action, data):
+        self.actions.append((action, data))
+
+    def load_actions(self):
+        return []
+
+
+@pytest.fixture
+def test_db(tmp_path):
+    """Fresh Database instance for testing without persistence."""
+    db = Database()
+    db.persistence = DummyPersistence()
+    db.libraries = {}
+    db.documents = {}
+    db.chunks = {}
+    db.inverted_index = InvertedIndex()
+    db.lib_num = db.doc_num = db.chunk_num = 0
+    db.is_loading = False
+    yield db
+
+
+@pytest.fixture(autouse=True)
+def stub_embeddings(monkeypatch):
+    """Globally stub embed generation to avoid external Cohere API calls during tests."""
+
+    def fake_generate(texts, input_type="search_document"):
+        return [[1.0, 0.0] for _ in texts]
+
+    monkeypatch.setattr(index_service, "generate_embeddings", fake_generate)
+    monkeypatch.setattr(search_service, "generate_embeddings", fake_generate)
+    yield
+
+
+@pytest.fixture
+def client(test_db, monkeypatch):
+    # override FastAPI dependency to return the test_db
+    from app.api import deps
+
+    monkeypatch.setattr(deps, "get_db", lambda: test_db)
+    app.dependency_overrides[deps.get_db] = lambda: test_db
+    with TestClient(app) as c:
+        yield c
