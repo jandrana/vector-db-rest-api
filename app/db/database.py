@@ -103,7 +103,7 @@ class Database:
             docs = self.get_documents_by_library(lib_id)
             for doc in docs:
                 self.delete_document(doc.id)
-            
+
             del self.libraries[lib_id]
             self._persist("delete_library", {"id": lib_id})
             return 1
@@ -147,7 +147,7 @@ class Database:
     def get_documents_by_library(self, lib_id: int) -> List[Document]:
         with self.lock:
             return [doc for doc in self.documents.values() if doc.library_id == lib_id]
-    
+
     def delete_document(self, doc_id: int):
         with self.lock:
             if doc_id not in self.documents:
@@ -198,15 +198,21 @@ class Database:
             data["id"] = chunk_id
             changed = False
             if chunk.text is not None:
+                old_text = updated_chunk.text
                 updated_chunk.text = chunk.text
                 data["text"] = chunk.text
+                try:
+                    self.inverted_index.remove_chunk(chunk_id, old_text)
+                except Exception:
+                    pass
+                self.inverted_index.index_chunk(chunk_id, updated_chunk.text)
                 changed = True
             if chunk.embedding is not None:
                 updated_chunk.embedding = chunk.embedding
                 data["embedding"] = chunk.embedding
                 changed = True
             if changed:
-                self._save_action("update_chunk", data)
+                self._persist("update_chunk", data)
             return updated_chunk
 
     def get_chunk(self, chunk_id: int) -> Chunk:
@@ -224,7 +230,7 @@ class Database:
             return [
                 chunk for chunk in self.chunks.values() if chunk.library_id == lib_id
             ]
-    
+
     def delete_chunk(self, chunk_id: int):
         with self.lock:
             if chunk_id not in self.chunks:
