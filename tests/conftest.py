@@ -1,3 +1,11 @@
+import os
+import sys
+
+# ensure repository root is on sys.path so `import app` works in isolated environments (pre-commit hooks)
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
 import pytest
 
 from fastapi.testclient import TestClient
