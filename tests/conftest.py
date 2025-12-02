@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.api.deps import get_db
 from app.db.database import Database
 from app.db.inverted_index import InvertedIndex
 from app.services import index_service
@@ -39,7 +40,11 @@ def test_db(tmp_path):
     db.inverted_index = InvertedIndex()
     db.lib_num = db.doc_num = db.chunk_num = 0
     db.is_loading = False
-    yield db
+
+    if not hasattr(db, "_save_action"):
+        db._save_action = db.persistence.save_action
+
+    return db
 
 
 @pytest.fixture(autouse=True)
@@ -56,10 +61,8 @@ def stub_embeddings(monkeypatch):
 
 @pytest.fixture
 def client(test_db, monkeypatch):
-    # override FastAPI dependency to return the test_db
-    from app.api import deps
 
-    monkeypatch.setattr(deps, "get_db", lambda: test_db)
-    app.dependency_overrides[deps.get_db] = lambda: test_db
+    app.dependency_overrides[get_db] = lambda: test_db
     with TestClient(app) as c:
         yield c
+    app.dependency_overrides.pop(get_db, None)
