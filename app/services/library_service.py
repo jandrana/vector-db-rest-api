@@ -29,12 +29,14 @@ class LibraryService(ILibraryService):
         return self._library_repository.create(library.name)
 
     def update_library(self, library_id: int, library: LibraryUpdate) -> Library:
+        if not self._library_repository.get(library_id):
+            raise EntityNotFoundError.library(library_id)
         updated = self._library_repository.update(library_id, library.name)
         if not updated:
             raise EntityNotFoundError.library(library_id)
         return updated
 
     def delete_library(self, library_id: int) -> None:
-        deleted = self._library_repository.delete(library_id)
-        if not deleted:
+        if not self._library_repository.get(library_id):
             raise EntityNotFoundError.library(library_id)
+        self._library_repository.delete(library_id)

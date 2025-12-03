@@ -6,14 +6,16 @@ from app.core.exceptions import DatabaseError, ValidationError, get_http_status_
 from app.api.routes import library, document, chunk, search
 
 
-async def database_error_handler(_request: Request, exc: DatabaseError):
+async def database_error_handler(_request: Request, exc: DatabaseError) -> JSONResponse:
     """Convert domain exceptions to HTTP responses."""
     return JSONResponse(
         status_code=get_http_status_code(exc), content={"detail": str(exc)}
     )
 
 
-async def validation_error_handler(_request: Request, exc: ValidationError):
+async def validation_error_handler(
+    _request: Request, exc: ValidationError
+) -> JSONResponse:
     """Handle validation errors."""
     return JSONResponse(
         status_code=get_http_status_code(exc),
@@ -43,7 +45,7 @@ def get_application() -> FastAPI:
     application.include_router(chunk.router, prefix="/chunks", tags=["Chunks"])
     application.include_router(search.router, tags=["Indexing and Search"])
 
-    @application.get("/")
+    @application.get("/", description="Health check endpoint")
     def health_check():
         return {"status": "ok", "message": "API is running"}
 

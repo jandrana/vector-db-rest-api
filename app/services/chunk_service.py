@@ -64,6 +64,5 @@ class ChunkService(IChunkService):
         return updated
 
     def delete_chunk(self, chunk_id: int) -> None:
-        deleted = self._chunk_repository.delete(chunk_id)
-        if not deleted:
-            raise EntityNotFoundError.chunk(chunk_id)
+        self._validate_chunk_exists(chunk_id)
+        self._chunk_repository.delete(chunk_id)

@@ -43,12 +43,12 @@ class DocumentService(IDocumentService):
         return self._document_repository.create(document.name, document.library_id)
 
     def update_document(self, document_id: int, document: DocumentUpdate) -> Document:
+        self._validate_document_exists(document_id)
         updated = self._document_repository.update(document_id, document.name)
         if not updated:
             raise EntityNotFoundError.document(document_id)
         return updated
 
     def delete_document(self, document_id: int) -> None:
-        deleted = self._document_repository.delete(document_id)
-        if not deleted:
-            raise EntityNotFoundError.document(document_id)
+        self._validate_document_exists(document_id)
+        self._document_repository.delete(document_id)
