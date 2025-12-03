@@ -86,18 +86,18 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
             self.chunks[new_id] = new_chunk
             if disk_id is not None:
                 self.id_generator.set_chunk_id(disk_id)
+            self.inverted_index.index_chunk(new_id, text)
             if not self._replay_mode:
-                self.inverted_index.index_chunk(new_id, text)
-            self._persist(
-                "create_chunk",
-                {
-                    "id": new_id,
-                    "text": text,
-                    "document_id": document_id,
-                    "library_id": self._get_lib_id_from_document(document_id),
-                    "embedding": embedding,
-                },
-            )
+                    self._persist(
+                    "create_chunk",
+                    {
+                        "id": new_id,
+                        "text": text,
+                        "document_id": document_id,
+                        "library_id": self._get_lib_id_from_document(document_id),
+                        "embedding": embedding,
+                    },
+                )
             return new_chunk
 
     def update(
@@ -118,18 +118,19 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
                 chunk.document_id = document_id
             if embedding is not None:
                 chunk.embedding = embedding
-            if not self._replay_mode and text is not None and text != old_text:
+            if text is not None and text != old_text:
                 self.inverted_index.remove_chunk(chunk_id, old_text)
                 self.inverted_index.index_chunk(chunk_id, text)
-            self._persist(
-                "update_chunk",
-                {
-                    "id": chunk_id,
-                    "text": text,
-                    "document_id": document_id,
-                    "embedding": embedding,
-                },
-            )
+            if not self._replay_mode:
+                    self._persist(
+                    "update_chunk",
+                    {
+                        "id": chunk_id,
+                        "text": text,
+                        "document_id": document_id,
+                        "embedding": embedding,
+                    },
+                )
             return chunk
 
     def delete(self, chunk_id: int) -> int:
@@ -137,10 +138,10 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
             if chunk_id not in self.chunks:
                 return 0
             chunk = self.chunks[chunk_id]
-            if not self._replay_mode:
-                self.inverted_index.remove_chunk(chunk_id, chunk.text)
+            self.inverted_index.remove_chunk(chunk_id, chunk.text)
             del self.chunks[chunk_id]
-            self._persist("delete_chunk", {"id": chunk_id})
+            if not self._replay_mode:
+                self._persist("delete_chunk", {"id": chunk_id})
             return 1
 
     def get_replay_handlers(self) -> Dict[str, ReplayHandler]:

@@ -25,6 +25,8 @@ class SearchRepository(ISearchRepository):
             results = []
             for chunk_id, score in scores.items():
                 chunk = self.chunk_repository.get(chunk_id)
+                if chunk is None:
+                    continue
                 if library_id is not None and chunk.library_id != library_id:
                     continue
                 results.append((chunk, score))
