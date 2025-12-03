@@ -5,7 +5,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./vector_db.jsonl:/app/vector_db.jsonl
+      - ./${DB_FILE:-default_db.jsonl}:/app/${DB_FILE:-default_db.jsonl}
     env_file:
       - .env
     restart: unless-stopped
@@ -23,6 +23,6 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-  
+
 volumes:
   n8n_data:

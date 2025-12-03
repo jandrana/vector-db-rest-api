@@ -9,7 +9,7 @@ help:
 	@echo "              Detected Docker Command: $(DOCKER_COMPOSE)"
 	@echo "======================================================================"
 	@echo " SETUP:"
-	@echo "   make setup   : Create .env and vector_db.jsonl files"
+	@echo "   make setup   : Create .env and database file (from DB_FILE in .env)"
 	@echo " LOCAL DEV (API ONLY):"
 	@echo "   make venv      : Create a Python virtual environment in .venv"
 	@echo "   make install   : Install Python dependencies locally"
@@ -25,8 +25,8 @@ help:
 	@echo "======================================================================"
 
 setup:
-	@python -c "import os; f='vector_db.jsonl'; (not os.path.exists(f)) and [open(f, 'a').close(), print(f + ' file created.')]"
 	@python -c "import os; import shutil; f='.env'; (not os.path.exists(f)) and [shutil.copy('.env.example', f), print(f + ' file created. Please configure the API keys.')]"
+	@python -c "import os; from app.core.config import Settings; s = Settings(); db_file = s.DB_FILE; os.path.exists(db_file) or (open(db_file, 'a').close(), print('Database file', db_file, 'created.'))"
 	@echo "Setup complete."
 
 install:
@@ -39,7 +39,8 @@ run:
 
 up: setup
 	@echo "Starting API and n8n..."
-	$(DOCKER_COMPOSE) up -d --build
+	@DB_FILE=$$(python -c "from app.core.config import Settings; print(Settings().DB_FILE)"); \
+	DB_FILE=$$DB_FILE $(DOCKER_COMPOSE) up -d --build
 	@echo "======================================================"
 	@echo "API available at http://localhost:8000/docs"
 	@echo "n8n available at http://localhost:5678"
@@ -47,7 +48,8 @@ up: setup
 
 up-api: setup
 	@echo "Starting API (without n8n)..."
-	$(DOCKER_COMPOSE) up -d --build api
+	@DB_FILE=$$(python -c "from app.core.config import Settings; print(Settings().DB_FILE)"); \
+	DB_FILE=$$DB_FILE $(DOCKER_COMPOSE) up -d --build api
 	@echo "======================================================"
 	@echo "API available at http://localhost:8000/docs"
 	@echo "n8n is disabled"
