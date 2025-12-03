@@ -1,25 +1,23 @@
-import string
 from typing import Dict, Set
+from app.interfaces.indexing import IInvertedIndex, ITokenizationStrategy
 
 
-class InvertedIndex:
-    def __init__(self):
+class InvertedIndex(IInvertedIndex):
+    def __init__(self, tokenization_strategy: ITokenizationStrategy):
+        self._tokenization_strategy = tokenization_strategy
         self.index: Dict[str, Set[int]] = {}
 
     def _tokenize(self, text: str) -> Set[str]:
-        normalized_text = text.lower().translate(
-            str.maketrans("", "", string.punctuation)
-        )
-        return set(normalized_text.split())
+        return self._tokenization_strategy.tokenize(text)
 
-    def index_chunk(self, chunk_id: int, text: str):
+    def index_chunk(self, chunk_id: int, text: str) -> None:
         words = self._tokenize(text)
         for word in words:
             if word not in self.index:
                 self.index[word] = set()
             self.index[word].add(chunk_id)
 
-    def remove_chunk(self, chunk_id: int, text: str):
+    def remove_chunk(self, chunk_id: int, text: str) -> None:
         words = self._tokenize(text)
         for word in words:
             if word in self.index:
