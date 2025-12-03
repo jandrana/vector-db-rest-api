@@ -1,55 +1,45 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, status, Depends
 from typing import List
 from app.schemas.chunk import ChunkCreate, ChunkUpdate, ChunkResponse, ChunkDetail
 from app.api import deps
-from app.db.database import Database
+from app.services.chunk_service import ChunkService
 
 router = APIRouter()
 
 
 @router.post("/", response_model=ChunkResponse, status_code=status.HTTP_201_CREATED)
-def create_chunk(chunk: ChunkCreate, db: Database = Depends(deps.get_db)):
-    if not db.get_document(chunk.document_id):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document with id {chunk.document_id} not found",
-        )
-    return db.create_chunk(chunk)
+def create_chunk(
+    chunk: ChunkCreate, service: ChunkService = Depends(deps.get_chunk_service)
+):
+    return service.create_chunk(chunk)
 
 
 @router.get("/{chunk_id}", response_model=ChunkDetail, status_code=status.HTTP_200_OK)
-def get_chunk(chunk_id: int, db: Database = Depends(deps.get_db)):
-    chunk = db.get_chunk(chunk_id)
-    if not chunk:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found"
-        )
-
-    return chunk
+def get_chunk(chunk_id: int, service: ChunkService = Depends(deps.get_chunk_service)):
+    chunk = service.get_chunk(chunk_id)
+    return ChunkDetail.model_validate(
+        {
+            **chunk.model_dump(),
+        }
+    )
 
 
 @router.get("/", response_model=List[ChunkResponse], status_code=status.HTTP_200_OK)
-def get_all_chunks(db: Database = Depends(deps.get_db)):
-    return list(db.chunks.values())
+def get_all_chunks(service: ChunkService = Depends(deps.get_chunk_service)):
+    return service.get_all_chunks()
 
 
 @router.patch("/{chunk_id}", response_model=ChunkDetail, status_code=status.HTTP_200_OK)
 def update_chunk(
-    chunk_id: int, chunk: ChunkUpdate, db: Database = Depends(deps.get_db)
+    chunk_id: int,
+    chunk: ChunkUpdate,
+    service: ChunkService = Depends(deps.get_chunk_service),
 ):
-    updated_chunk = db.update_chunk(chunk_id, chunk)
-    if not updated_chunk:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found"
-        )
-    return updated_chunk
+    return service.update_chunk(chunk_id, chunk)
 
 
 @router.delete("/{chunk_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_chunk(chunk_id: int, db: Database = Depends(deps.get_db)):
-    res = db.delete_chunk(chunk_id)
-    if res == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Chunk not found"
-        )
-    return None
+def delete_chunk(
+    chunk_id: int, service: ChunkService = Depends(deps.get_chunk_service)
+):
+    service.delete_chunk(chunk_id)

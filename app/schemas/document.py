@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from app.schemas.chunk import ChunkBase
+from app.schemas.chunk import ChunkResponse
 
 
 class DocumentBase(BaseModel):
@@ -21,4 +21,6 @@ class DocumentResponse(DocumentBase):
 
 
 class DocumentDetail(DocumentBase):
-    chunks: List[ChunkBase] = Field(..., description="List of chunks in the document")
+    chunks: List[ChunkResponse] = Field(
+        ..., description="List of chunks in the document"
+    )
