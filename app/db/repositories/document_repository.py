@@ -6,7 +6,6 @@ from app.interfaces.repositories.replayable_repository import IReplayableReposit
 from app.interfaces.id_generation import IIdGenerator
 from app.interfaces.persistence import IPersistenceManager
 
-# Type alias for replay handler functions
 ReplayHandler = Callable[[str, Dict[str, Any]], None]
 
 
@@ -22,7 +21,7 @@ class DocumentRepository(IDocumentRepository, IReplayableRepository):
         self.id_generator = id_generator
         self.persistence_manager = persistence_manager
         self.lock = lock
-        self._replay_mode = False  # Skip persistence during replay
+        self._replay_mode = False
 
     def _persist(self, action: str, data: Dict[str, Any]) -> None:
         if not self._replay_mode:

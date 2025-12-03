@@ -8,7 +8,6 @@ from app.interfaces.persistence import IPersistenceManager
 from app.interfaces.indexing import IInvertedIndex
 from app.interfaces.repositories.document_repository import IDocumentRepository
 
-# Type alias for replay handler functions
 ReplayHandler = Callable[[str, Dict[str, Any]], None]
 
 

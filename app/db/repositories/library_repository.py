@@ -6,7 +6,6 @@ from app.interfaces.repositories.replayable_repository import IReplayableReposit
 from app.interfaces.id_generation import IIdGenerator
 from app.interfaces.persistence import IPersistenceManager
 
-# Type alias for replay handler functions
 ReplayHandler = Callable[[str, Dict[str, Any]], None]
 
 
