@@ -9,7 +9,11 @@ from app.services.index_service import IndexService
 router = APIRouter()
 
 
-@router.post("/libraries/{lib_id}/index", status_code=status.HTTP_200_OK)
+@router.post(
+    "/libraries/{lib_id}/index",
+    status_code=status.HTTP_200_OK,
+    description="Index all chunks in a library by generating embeddings for chunks without them",
+)
 def index_library(
     lib_id: int, service: IndexService = Depends(deps.get_index_service)
 ) -> Dict[str, Any]:
@@ -20,6 +24,7 @@ def index_library(
     "/libraries/{lib_id}/search",
     response_model=List[SearchResult],
     status_code=status.HTTP_200_OK,
+    description="Search a library using either keyword or k-NN vector search",
 )
 def search_library(
     lib_id: int,

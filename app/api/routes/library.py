@@ -14,7 +14,12 @@ from app.services.document_service import DocumentService
 router = APIRouter()
 
 
-@router.post("/", response_model=LibraryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=LibraryResponse,
+    status_code=status.HTTP_201_CREATED,
+    description="Create a new library",
+)
 def create_library(
     library: LibraryCreate, service: LibraryService = Depends(deps.get_library_service)
 ):
@@ -22,7 +27,10 @@ def create_library(
 
 
 @router.get(
-    "/{library_id}", response_model=LibraryDetail, status_code=status.HTTP_200_OK
+    "/{library_id}",
+    response_model=LibraryDetail,
+    status_code=status.HTTP_200_OK,
+    description="Get a library by ID with all its documents",
 )
 def get_library(
     library_id: int,
@@ -36,13 +44,21 @@ def get_library(
     )
 
 
-@router.get("/", response_model=List[LibraryResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/",
+    response_model=List[LibraryResponse],
+    status_code=status.HTTP_200_OK,
+    description="Get all libraries",
+)
 def get_all_libraries(service: LibraryService = Depends(deps.get_library_service)):
     return service.get_all_libraries()
 
 
 @router.patch(
-    "/{library_id}", response_model=LibraryResponse, status_code=status.HTTP_200_OK
+    "/{library_id}",
+    response_model=LibraryResponse,
+    status_code=status.HTTP_200_OK,
+    description="Update a library by ID",
 )
 def update_library(
     library_id: int,
@@ -52,7 +68,11 @@ def update_library(
     return service.update_library(library_id, library)
 
 
-@router.delete("/{library_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{library_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Delete a library by ID",
+)
 def delete_library(
     library_id: int, service: LibraryService = Depends(deps.get_library_service)
 ):
