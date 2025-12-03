@@ -6,6 +6,9 @@ from app.interfaces.repositories.replayable_repository import IReplayableReposit
 from app.interfaces.id_generation import IIdGenerator
 from app.interfaces.persistence import IPersistenceManager
 
+# Type alias for replay handler functions
+ReplayHandler = Callable[[str, Dict[str, Any]], None]
+
 
 class LibraryRepository(ILibraryRepository, IReplayableRepository):
     def __init__(
@@ -65,13 +68,13 @@ class LibraryRepository(ILibraryRepository, IReplayableRepository):
             self._persist("delete_library", {"id": library_id})
             return 1
 
-    def get_replay_handlers(self) -> Dict[str, Callable[[str, Dict[str, Any]], None]]:
+    def get_replay_handlers(self) -> Dict[str, ReplayHandler]:
         return {
-            "create_library": lambda action, data: self.create(
+            "create_library": lambda _action, data: self.create(
                 data["name"], disk_id=data["id"]
             ),
-            "update_library": lambda action, data: self.update(
+            "update_library": lambda _action, data: self.update(
                 data["id"], data.get("name")
             ),
-            "delete_library": lambda action, data: self.delete(data["id"]),
+            "delete_library": lambda _action, data: self.delete(data["id"]),
         }

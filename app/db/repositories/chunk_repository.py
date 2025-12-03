@@ -8,6 +8,9 @@ from app.interfaces.persistence import IPersistenceManager
 from app.interfaces.indexing import IInvertedIndex
 from app.interfaces.repositories.document_repository import IDocumentRepository
 
+# Type alias for replay handler functions
+ReplayHandler = Callable[[str, Dict[str, Any]], None]
+
 
 class ChunkRepository(IChunkRepository, IReplayableRepository):
     def __init__(
@@ -141,19 +144,19 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
             self._persist("delete_chunk", {"id": chunk_id})
             return 1
 
-    def get_replay_handlers(self) -> Dict[str, Callable[[str, Dict[str, Any]], None]]:
+    def get_replay_handlers(self) -> Dict[str, ReplayHandler]:
         return {
-            "create_chunk": lambda action, data: self.create(
+            "create_chunk": lambda _action, data: self.create(
                 data["text"],
                 data["document_id"],
                 embedding=data.get("embedding"),
                 disk_id=data["id"],
             ),
-            "update_chunk": lambda action, data: self.update(
+            "update_chunk": lambda _action, data: self.update(
                 data["id"],
                 data.get("text"),
                 data.get("document_id"),
                 data.get("embedding"),
             ),
-            "delete_chunk": lambda action, data: self.delete(data["id"]),
+            "delete_chunk": lambda _action, data: self.delete(data["id"]),
         }
