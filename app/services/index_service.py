@@ -3,7 +3,7 @@ from app.interfaces.services.index_service import IIndexService
 from app.interfaces.repositories.chunk_repository import IChunkRepository
 from app.interfaces.services.embedding_service import IEmbeddingService
 from app.interfaces.repositories.library_repository import ILibraryRepository
-from app.core.exceptions import EntityNotFoundError
+from app.core.decorators import library_exists
 
 
 class IndexService(IIndexService):
@@ -17,12 +17,8 @@ class IndexService(IIndexService):
         self._embedding_service = embedding_service
         self._library_repository = library_repository
 
-    def _validate_library_exists(self, library_id: int) -> None:
-        if not self._library_repository.get(library_id):
-            raise EntityNotFoundError.library(library_id)
-
+    @library_exists
     def index_library(self, library_id: int) -> Dict[str, Any]:
-        self._validate_library_exists(library_id)
         lib_chunks = self._chunk_repository.get_by_library(library_id)
         to_embed = [chunk for chunk in lib_chunks if chunk.embedding is None]
         if not to_embed:
