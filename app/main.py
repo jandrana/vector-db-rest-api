@@ -50,7 +50,7 @@ def get_application() -> FastAPI:
     application.include_router(search.router, tags=["Indexing and Search"])
 
     @application.get("/", description="Health check endpoint")
-    def health_check():
+    def health_check() -> dict:
         return {"status": "ok", "message": "API is running"}
 
     return application

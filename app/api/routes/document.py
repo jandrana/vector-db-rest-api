@@ -22,7 +22,7 @@ router = APIRouter()
 def create_document(
     document: DocumentCreate,
     service: DocumentService = Depends(deps.get_document_service),
-):
+) -> DocumentResponse:
     return service.create_document(document)
 
 
@@ -35,7 +35,7 @@ def create_document(
 def get_document(
     document_id: int,
     service: DocumentService = Depends(deps.get_document_service),
-):
+) -> DocumentDetail:
     return service.get_document_with_details(document_id)
 
 
@@ -45,7 +45,7 @@ def get_document(
     status_code=status.HTTP_200_OK,
     description="Get all documents",
 )
-def get_all_documents(service: DocumentService = Depends(deps.get_document_service)):
+def get_all_documents(service: DocumentService = Depends(deps.get_document_service)) -> List[DocumentResponse]:
     return service.get_all_documents()
 
 
@@ -59,7 +59,7 @@ def update_document(
     document_id: int,
     document: DocumentUpdate,
     service: DocumentService = Depends(deps.get_document_service),
-):
+) -> DocumentResponse:
     return service.update_document(document_id, document)
 
 

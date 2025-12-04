@@ -21,7 +21,7 @@ router = APIRouter()
 )
 def create_library(
     library: LibraryCreate, service: LibraryService = Depends(deps.get_library_service)
-):
+) -> LibraryResponse:
     return service.create_library(library)
 
 
@@ -34,7 +34,7 @@ def create_library(
 def get_library(
     library_id: int,
     service: LibraryService = Depends(deps.get_library_service),
-):
+) -> LibraryDetail:
     return service.get_library_with_details(library_id)
 
 
@@ -44,7 +44,7 @@ def get_library(
     status_code=status.HTTP_200_OK,
     description="Get all libraries",
 )
-def get_all_libraries(service: LibraryService = Depends(deps.get_library_service)):
+def get_all_libraries(service: LibraryService = Depends(deps.get_library_service)) -> List[LibraryResponse]:
     return service.get_all_libraries()
 
 
@@ -58,7 +58,7 @@ def update_library(
     library_id: int,
     library: LibraryUpdate,
     service: LibraryService = Depends(deps.get_library_service),
-):
+) -> LibraryResponse:
     return service.update_library(library_id, library)
 
 
