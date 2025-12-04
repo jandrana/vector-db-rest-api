@@ -7,6 +7,7 @@ from app.schemas.library import (
     LibraryResponse,
     LibraryDetail,
 )
+from app.schemas.document import DocumentResponse
 from app.api import deps
 from app.services.library_service import LibraryService
 from app.services.document_service import DocumentService
@@ -39,9 +40,15 @@ def get_library(
 ):
     library = library_service.get_library(library_id)
     documents = document_service.get_documents_by_library(library_id)
-    return LibraryDetail.model_validate(
-        {**library.model_dump(), "documents": documents}
-    )
+    document_responses = [
+        DocumentResponse(
+            id=doc.id,
+            name=doc.name,
+            library_id=doc.library_id,
+        )
+        for doc in documents
+    ]
+    return {**library.model_dump(), "documents": document_responses}
 
 
 @router.get(
@@ -74,6 +81,7 @@ def update_library(
     description="Delete a library by ID",
 )
 def delete_library(
-    library_id: int, service: LibraryService = Depends(deps.get_library_service)
+    library_id: int,
+    service: LibraryService = Depends(deps.get_library_service),
 ):
     service.delete_library(library_id)

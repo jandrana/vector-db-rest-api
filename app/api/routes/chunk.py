@@ -25,13 +25,12 @@ def create_chunk(
     status_code=status.HTTP_200_OK,
     description="Get a chunk by ID with full details",
 )
-def get_chunk(chunk_id: int, service: ChunkService = Depends(deps.get_chunk_service)):
+def get_chunk(
+    chunk_id: int,
+    service: ChunkService = Depends(deps.get_chunk_service),
+):
     chunk = service.get_chunk(chunk_id)
-    return ChunkDetail.model_validate(
-        {
-            **chunk.model_dump(),
-        }
-    )
+    return {**chunk.model_dump() }
 
 
 @router.get(
@@ -64,6 +63,7 @@ def update_chunk(
     description="Delete a chunk by ID",
 )
 def delete_chunk(
-    chunk_id: int, service: ChunkService = Depends(deps.get_chunk_service)
+    chunk_id: int,
+    service: ChunkService = Depends(deps.get_chunk_service),
 ):
     service.delete_chunk(chunk_id)
