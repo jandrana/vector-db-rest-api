@@ -1,6 +1,7 @@
 from app.schemas.library import LibraryCreate
 from app.schemas.document import DocumentCreate
 from app.schemas.chunk import ChunkCreate
+from app.schemas.search import SearchResult
 
 
 def test_search_keyword_and_knn(test_container):
@@ -30,14 +31,14 @@ def test_search_keyword_and_knn(test_container):
     # Keyword search
     kres = search_service.search("keyword", lib.id, "apple", k=2)
     assert len(kres) == 1
-    assert isinstance(kres[0], dict)
-    assert "chunk" in kres[0]
-    assert "score" in kres[0]
+    assert isinstance(kres[0], SearchResult)
+    assert kres[0].chunk is not None
+    assert kres[0].score is not None
 
     # KNN search
     knn = search_service.search("knn", lib.id, "some query", k=2)
     assert len(knn) > 0
-    assert isinstance(knn[0], dict)
-    assert "chunk" in knn[0]
-    assert "score" in knn[0]
-    assert knn[0]["chunk"].id == c1.id
+    assert isinstance(knn[0], SearchResult)
+    assert knn[0].chunk is not None
+    assert knn[0].score is not None
+    assert knn[0].chunk.id == c1.id
