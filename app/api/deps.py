@@ -1,4 +1,4 @@
-from fastapi import Depends, Request, HTTPException, status
+from fastapi import Depends, Request
 from app.core.container import DIContainer
 from app.interfaces.services.library_service import ILibraryService
 from app.interfaces.services.document_service import IDocumentService
@@ -9,14 +9,6 @@ from app.interfaces.services.search_service import ISearchService
 
 
 def get_container(request: Request) -> DIContainer:
-    if (
-        not hasattr(request.app.state, "container")
-        or request.app.state.container is None
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Application container not initialized.",
-        )
     return request.app.state.container
 
 
