@@ -7,10 +7,8 @@ from app.schemas.document import (
     DocumentResponse,
     DocumentDetail,
 )
-from app.schemas.chunk import ChunkResponse
 from app.api import deps
 from app.services.document_service import DocumentService
-from app.services.chunk_service import ChunkService
 
 router = APIRouter()
 
@@ -24,7 +22,7 @@ router = APIRouter()
 def create_document(
     document: DocumentCreate,
     service: DocumentService = Depends(deps.get_document_service),
-):
+) -> DocumentResponse:
     return service.create_document(document)
 
 
@@ -36,20 +34,9 @@ def create_document(
 )
 def get_document(
     document_id: int,
-    document_service: DocumentService = Depends(deps.get_document_service),
-    chunk_service: ChunkService = Depends(deps.get_chunk_service),
-):
-    document = document_service.get_document(document_id)
-    chunks = chunk_service.get_chunks_by_document(document_id)
-    chunk_responses = [
-        ChunkResponse(
-            id=chunk.id,
-            text=chunk.text,
-            document_id=chunk.document_id,
-        )
-        for chunk in chunks
-    ]
-    return {**document.model_dump(), "chunks": chunk_responses}
+    service: DocumentService = Depends(deps.get_document_service),
+) -> DocumentDetail:
+    return service.get_document_with_details(document_id)
 
 
 @router.get(
@@ -58,7 +45,7 @@ def get_document(
     status_code=status.HTTP_200_OK,
     description="Get all documents",
 )
-def get_all_documents(service: DocumentService = Depends(deps.get_document_service)):
+def get_all_documents(service: DocumentService = Depends(deps.get_document_service)) -> List[DocumentResponse]:
     return service.get_all_documents()
 
 
@@ -72,7 +59,7 @@ def update_document(
     document_id: int,
     document: DocumentUpdate,
     service: DocumentService = Depends(deps.get_document_service),
-):
+) -> DocumentResponse:
     return service.update_document(document_id, document)
 
 

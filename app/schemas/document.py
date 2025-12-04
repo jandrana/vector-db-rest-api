@@ -12,7 +12,7 @@ class DocumentCreate(DocumentBase):
     pass
 
 
-class DocumentUpdate(DocumentBase):
+class DocumentUpdate(BaseModel):
     name: Optional[str] = Field(None, description="New document name")
 
 
@@ -21,6 +21,7 @@ class DocumentResponse(DocumentBase):
 
 
 class DocumentDetail(DocumentBase):
+    id: int
     chunks: List[ChunkResponse] = Field(
         ..., description="List of chunks in the document"
     )

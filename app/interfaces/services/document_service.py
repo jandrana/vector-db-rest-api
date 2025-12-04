@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 from app.db.models import Document
-from app.schemas.document import DocumentCreate, DocumentUpdate
+from app.schemas.document import DocumentCreate, DocumentUpdate, DocumentDetail
 
 
 class IDocumentReader(ABC):
@@ -15,6 +15,10 @@ class IDocumentReader(ABC):
 
     @abstractmethod
     def get_all_documents(self) -> List[Document]:
+        pass
+
+    @abstractmethod
+    def get_document_with_details(self, document_id: int) -> DocumentDetail:
         pass
 
 

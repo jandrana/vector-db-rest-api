@@ -41,5 +41,5 @@ class IChunkRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, chunk_id: int) -> int:
+    def delete(self, chunk_id: int) -> bool:
         pass

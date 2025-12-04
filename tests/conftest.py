@@ -11,7 +11,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from app.main import get_application
-from app.core.container import DIContainer
+from app.core.containers import AppContainer
 from app.core.config import Settings
 
 
@@ -39,7 +39,8 @@ def test_container(test_db_file, monkeypatch):
         EMBEDDING_MODEL="test-model",
         _env_file=None,
     )
-    container = DIContainer(settings=settings)
+    container = AppContainer()
+    container.config.from_pydantic(settings)
     yield container
 
 
@@ -60,6 +61,20 @@ def stub_embeddings(monkeypatch):
     from app.services.embedding.embedding_provider import CohereEmbeddingProvider
 
     monkeypatch.setattr(CohereEmbeddingProvider, "generate_embeddings", patched_method)
+    yield
+
+
+@pytest.fixture(autouse=True)
+def prevent_db_writes(monkeypatch):
+    """Prevent all database writes during tests to keep test isolation."""
+
+    def noop_save_action(self, action: str, data: dict) -> None:
+        """No-op method that prevents any writes to the database file."""
+        pass
+
+    from app.db.storage.storage import Storage
+
+    monkeypatch.setattr(Storage, "save_action", noop_save_action)
     yield
 
 

@@ -15,7 +15,7 @@ router = APIRouter()
 )
 def create_chunk(
     chunk: ChunkCreate, service: ChunkService = Depends(deps.get_chunk_service)
-):
+) -> ChunkResponse:
     return service.create_chunk(chunk)
 
 
@@ -28,9 +28,15 @@ def create_chunk(
 def get_chunk(
     chunk_id: int,
     service: ChunkService = Depends(deps.get_chunk_service),
-):
+) -> ChunkDetail:
     chunk = service.get_chunk(chunk_id)
-    return {**chunk.model_dump() }
+    return ChunkDetail(
+        id=chunk.id,
+        text=chunk.text,
+        document_id=chunk.document_id,
+        library_id=chunk.library_id,
+        embedding=chunk.embedding,
+    )
 
 
 @router.get(
@@ -39,7 +45,7 @@ def get_chunk(
     status_code=status.HTTP_200_OK,
     description="Get all chunks",
 )
-def get_all_chunks(service: ChunkService = Depends(deps.get_chunk_service)):
+def get_all_chunks(service: ChunkService = Depends(deps.get_chunk_service)) -> List[ChunkResponse]:
     return service.get_all_chunks()
 
 
@@ -53,8 +59,15 @@ def update_chunk(
     chunk_id: int,
     chunk: ChunkUpdate,
     service: ChunkService = Depends(deps.get_chunk_service),
-):
-    return service.update_chunk(chunk_id, chunk)
+) -> ChunkDetail:
+    updated_chunk = service.update_chunk(chunk_id, chunk)
+    return ChunkDetail(
+        id=updated_chunk.id,
+        text=updated_chunk.text,
+        document_id=updated_chunk.document_id,
+        library_id=updated_chunk.library_id,
+        embedding=updated_chunk.embedding,
+    )
 
 
 @router.delete(

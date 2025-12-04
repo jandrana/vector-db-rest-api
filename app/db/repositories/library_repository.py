@@ -59,13 +59,13 @@ class LibraryRepository(ILibraryRepository, IReplayableRepository):
             self._persist("update_library", {"id": library_id, "name": name})
             return library
 
-    def delete(self, library_id: int) -> int:
+    def delete(self, library_id: int) -> bool:
         with self.lock:
             if library_id not in self.libraries:
-                return 0
+                return False
             del self.libraries[library_id]
             self._persist("delete_library", {"id": library_id})
-            return 1
+            return True
 
     def get_replay_handlers(self) -> Dict[str, ReplayHandler]:
         return {

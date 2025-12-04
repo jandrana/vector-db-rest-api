@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import List, Dict, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.schemas.search import SearchResult
 
 
 class ISearchStrategy(ABC):
@@ -16,5 +19,5 @@ class ISearchService(ABC):
     @abstractmethod
     def search(
         self, strategy: str, library_id: int, query: str, k: int
-    ) -> List[Dict[str, Any]]:
+    ) -> List["SearchResult"]:
         pass

@@ -1,8 +1,9 @@
 from fastapi import status
+from typing import Any, Optional
 
 
 class DatabaseError(Exception):
-    def __init__(self, message: str, details: dict = None):
+    def __init__(self, message: str, details: Optional[dict] = None):
         super().__init__(message)
         self.message = message
         self.details = details or {}
@@ -14,12 +15,12 @@ class DatabaseError(Exception):
 
 
 class RepositoryError(DatabaseError):
-    def __init__(self, message: str, details: dict = None):
+    def __init__(self, message: str, details: Optional[dict] = None):
         super().__init__(f"Repository error: {message}", details)
 
 
 class EntityNotFoundError(RepositoryError):
-    def __init__(self, entity_type: str, entity_id: int, details: dict = None):
+    def __init__(self, entity_type: str, entity_id: int, details: Optional[dict] = None):
         message = f"{entity_type} with id {entity_id} not found"
         super().__init__(message, details)
         self.entity_type = entity_type
@@ -39,13 +40,13 @@ class EntityNotFoundError(RepositoryError):
 
 
 class ServiceError(DatabaseError):
-    def __init__(self, message: str, details: dict = None):
+    def __init__(self, message: str, details: Optional[dict] = None):
         super().__init__(f"Service error: {message}", details)
 
 
 class ValidationError(ServiceError):
     def __init__(
-        self, message: str, field: str = None, value: any = None, details: dict = None
+        self, message: str, field: Optional[str] = None, value: Any = None, details: Optional[dict] = None
     ):
         if field:
             message = f"Validation error for field '{field}': {message}"
@@ -57,11 +58,21 @@ class ValidationError(ServiceError):
         self.value = value
 
 
+class EmbeddingProviderError(ServiceError):
+    def __init__(self, message: str, provider: Optional[str] = None, details: Optional[dict] = None):
+        if provider:
+            message = f"Embedding provider error ({provider}): {message}"
+        super().__init__(message, details)
+        self.provider = provider
+
+
 def get_http_status_code(exception: DatabaseError) -> int:
     if isinstance(exception, EntityNotFoundError):
         return status.HTTP_404_NOT_FOUND
     elif isinstance(exception, ValidationError):
         return status.HTTP_422_UNPROCESSABLE_CONTENT
+    elif isinstance(exception, EmbeddingProviderError):
+        return status.HTTP_502_BAD_GATEWAY
     elif isinstance(exception, ServiceError):
         return status.HTTP_400_BAD_REQUEST
     elif isinstance(exception, RepositoryError):

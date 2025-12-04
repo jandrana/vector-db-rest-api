@@ -11,7 +11,7 @@ class LibraryCreate(LibraryBase):
     pass
 
 
-class LibraryUpdate(LibraryBase):
+class LibraryUpdate(BaseModel):
     name: Optional[str] = Field(None, description="New library name")
 
 
@@ -19,7 +19,8 @@ class LibraryResponse(LibraryBase):
     id: int
 
 
-class LibraryDetail(LibraryResponse):
+class LibraryDetail(LibraryBase):
+    id: int
     documents: List[DocumentResponse] = Field(
         ..., description="List of documents in the library"
     )

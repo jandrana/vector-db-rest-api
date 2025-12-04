@@ -17,6 +17,5 @@ def test_index_and_search_multiple_chunks():
     idx.index_chunk(2, "banana cherry")
     res = idx.search_word("banana")
     assert res[1] == 1 and res[2] == 1
-    # Check score counts
     res2 = idx.search_word("apple banana")
     assert res2[1] == 2 and res2.get(2) == 1
