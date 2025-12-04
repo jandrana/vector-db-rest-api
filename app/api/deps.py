@@ -1,6 +1,5 @@
 from fastapi import Depends, Request, HTTPException, status
 from app.core.container import DIContainer
-from app.core.exceptions import ValidationError
 from app.interfaces.services.library_service import ILibraryService
 from app.interfaces.services.document_service import IDocumentService
 from app.interfaces.services.chunk_service import IChunkService
@@ -10,17 +9,6 @@ from app.interfaces.services.search_service import ISearchService
 
 
 def get_container(request: Request) -> DIContainer:
-    if hasattr(request.app.state, "startup_error"):
-        error = request.app.state.startup_error
-        if isinstance(error, ValidationError):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail={"detail": str(error), "field": error.field},
-            )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(error)
-        )
-
     if (
         not hasattr(request.app.state, "container")
         or request.app.state.container is None
@@ -29,7 +17,6 @@ def get_container(request: Request) -> DIContainer:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Application container not initialized.",
         )
-
     return request.app.state.container
 
 

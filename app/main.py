@@ -26,13 +26,9 @@ async def validation_error_handler(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage application startup."""
     settings = get_settings()
-    try:
-        app.state.container = DIContainer(settings)
-    except Exception as e:
-        app.state.startup_error = e
-    
+    app.state.container = DIContainer(settings)
+
     yield
 
 
