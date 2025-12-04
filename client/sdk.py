@@ -1,21 +1,42 @@
+import logging
 import requests
 from typing import List, Dict, Any, Optional, Literal
 
+logger = logging.getLogger(__name__)
+
 
 class Client:
-    def __init__(self):
-        self.base_url = "http://localhost:8000"
+    def __init__(self, base_url: str = "http://localhost:8000"):
+        self.base_url = base_url
         self.session = requests.Session()
+        logger.debug(f"Initialized client with base_url: {base_url}")
 
     def _request(self, method: str, endpoint: str, **kwargs):
         url = f"{self.base_url}{endpoint}"
+        logger.debug(f"Making {method} request to {url}")
         try:
             response = self.session.request(method, url, **kwargs)
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Connection error: {e}")
+            raise
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code if e.response else None
+            logger.error(f"API error (status {status_code}): {e}")
+            if e.response:
+                try:
+                    error_response = e.response.json()
+                    logger.debug(f"Error response: {error_response}")
+                except ValueError:
+                    logger.debug(f"Error response: {e.response.text}")
+            raise
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Request timeout: {e}")
+            raise
         except requests.exceptions.RequestException as e:
-            print(f"Error: {e}")
-            return None
+            logger.error(f"Request error: {e}")
+            raise
 
     def get_all_libraries(self) -> List[Dict[str, Any]]:
         return self._request("GET", "/libraries")
