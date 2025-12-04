@@ -21,5 +21,5 @@ class ILibraryRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, library_id: int) -> int:
+    def delete(self, library_id: int) -> bool:
         pass

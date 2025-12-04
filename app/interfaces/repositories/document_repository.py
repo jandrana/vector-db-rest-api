@@ -27,5 +27,5 @@ class IDocumentRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, document_id: int) -> int:
+    def delete(self, document_id: int) -> bool:
         pass

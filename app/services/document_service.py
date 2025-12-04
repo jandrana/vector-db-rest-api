@@ -57,7 +57,7 @@ class DocumentService(IDocumentService):
     @document_exists
     def update_document(self, document_id: int, document: DocumentUpdate) -> Document:
         updated = self._document_repository.update(document_id, document.name)
-        if not updated:
+        if updated is None:
             raise EntityNotFoundError.document(document_id)
         return updated
 

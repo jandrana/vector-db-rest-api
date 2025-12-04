@@ -48,7 +48,7 @@ class LibraryService(ILibraryService):
     @library_exists
     def update_library(self, library_id: int, library: LibraryUpdate) -> Library:
         updated = self._library_repository.update(library_id, library.name)
-        if not updated:
+        if updated is None:
             raise EntityNotFoundError.library(library_id)
         return updated
 

@@ -125,14 +125,14 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
                 )
             return chunk
 
-    def delete(self, chunk_id: int) -> int:
+    def delete(self, chunk_id: int) -> bool:
         with self.lock:
             if chunk_id not in self.chunks:
-                return 0
+                return False
             del self.chunks[chunk_id]
             if not self._replay_mode:
                 self._persist("delete_chunk", {"id": chunk_id})
-            return 1
+            return True
 
     def get_replay_handlers(self) -> Dict[str, ReplayHandler]:
         return {

@@ -70,13 +70,13 @@ class DocumentRepository(IDocumentRepository, IReplayableRepository):
             self._persist("update_document", {"id": document_id, "name": name})
             return document
 
-    def delete(self, document_id: int) -> int:
+    def delete(self, document_id: int) -> bool:
         with self.lock:
             if document_id not in self.documents:
-                return 0
+                return False
             del self.documents[document_id]
             self._persist("delete_document", {"id": document_id})
-            return 1
+            return True
 
     def get_replay_handlers(self) -> Dict[str, ReplayHandler]:
         return {
