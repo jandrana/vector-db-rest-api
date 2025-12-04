@@ -9,7 +9,6 @@ class ILibraryReader(ABC):
     def get_library(self, library_id: int) -> Library:
         pass
 
-    # add page_size, page -> Tuple[List[Library], int, int]
     @abstractmethod
     def get_all_libraries(self) -> List[Library]:
         pass

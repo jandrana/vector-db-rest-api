@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends
 from typing import List
 from app.schemas.chunk import ChunkCreate, ChunkUpdate, ChunkResponse, ChunkDetail
 from app.api import deps
-from app.services.chunk_service import ChunkService
+from app.interfaces.services.chunk_service import IChunkService
 
 router = APIRouter()
 
@@ -14,9 +14,10 @@ router = APIRouter()
     description="Create a new chunk in a document",
 )
 def create_chunk(
-    chunk: ChunkCreate, service: ChunkService = Depends(deps.get_chunk_service)
+    chunk: ChunkCreate, service: IChunkService = Depends(deps.get_chunk_service)
 ) -> ChunkResponse:
-    return service.create_chunk(chunk)
+    created_chunk = service.create_chunk(chunk)
+    return ChunkResponse.model_validate(created_chunk.model_dump())
 
 
 @router.get(
@@ -27,16 +28,10 @@ def create_chunk(
 )
 def get_chunk(
     chunk_id: int,
-    service: ChunkService = Depends(deps.get_chunk_service),
+    service: IChunkService = Depends(deps.get_chunk_service),
 ) -> ChunkDetail:
     chunk = service.get_chunk(chunk_id)
-    return ChunkDetail(
-        id=chunk.id,
-        text=chunk.text,
-        document_id=chunk.document_id,
-        library_id=chunk.library_id,
-        embedding=chunk.embedding,
-    )
+    return ChunkDetail.model_validate(chunk.model_dump())
 
 
 @router.get(
@@ -45,8 +40,9 @@ def get_chunk(
     status_code=status.HTTP_200_OK,
     description="Get all chunks",
 )
-def get_all_chunks(service: ChunkService = Depends(deps.get_chunk_service)) -> List[ChunkResponse]:
-    return service.get_all_chunks()
+def get_all_chunks(service: IChunkService = Depends(deps.get_chunk_service)) -> List[ChunkResponse]:
+    chunks = service.get_all_chunks()
+    return [ChunkResponse.model_validate(chunk.model_dump()) for chunk in chunks]
 
 
 @router.patch(
@@ -58,16 +54,10 @@ def get_all_chunks(service: ChunkService = Depends(deps.get_chunk_service)) -> L
 def update_chunk(
     chunk_id: int,
     chunk: ChunkUpdate,
-    service: ChunkService = Depends(deps.get_chunk_service),
+    service: IChunkService = Depends(deps.get_chunk_service),
 ) -> ChunkDetail:
     updated_chunk = service.update_chunk(chunk_id, chunk)
-    return ChunkDetail(
-        id=updated_chunk.id,
-        text=updated_chunk.text,
-        document_id=updated_chunk.document_id,
-        library_id=updated_chunk.library_id,
-        embedding=updated_chunk.embedding,
-    )
+    return ChunkDetail.model_validate(updated_chunk.model_dump())
 
 
 @router.delete(
@@ -77,6 +67,6 @@ def update_chunk(
 )
 def delete_chunk(
     chunk_id: int,
-    service: ChunkService = Depends(deps.get_chunk_service),
-):
+    service: IChunkService = Depends(deps.get_chunk_service),
+) -> None:
     service.delete_chunk(chunk_id)

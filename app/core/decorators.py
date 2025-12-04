@@ -1,10 +1,10 @@
 import functools
 import inspect
-from typing import Callable
+from typing import Callable, Any
 from app.core.exceptions import EntityNotFoundError
 
 
-def _get_param_value(param_name: str, args: tuple, kwargs: dict, func: Callable) -> any:
+def _get_param_value(param_name: str, args: tuple, kwargs: dict, func: Callable) -> Any:
     sig = inspect.signature(func)
     param_names = list(sig.parameters.keys())[1:]
     
@@ -15,6 +15,20 @@ def _get_param_value(param_name: str, args: tuple, kwargs: dict, func: Callable)
         param_index = param_names.index(param_name)
         if param_index < len(args):
             return args[param_index]
+    
+    for param_name_key, param_value in zip(param_names, args):
+        if param_value is not None:
+            sentinel = object()
+            value = getattr(param_value, param_name, sentinel)
+            if value is not sentinel:
+                return value
+    
+    for param_value in kwargs.values():
+        if param_value is not None:
+            sentinel = object()
+            value = getattr(param_value, param_name, sentinel)
+            if value is not sentinel:
+                return value
     
     return None
 

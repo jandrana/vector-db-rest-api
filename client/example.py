@@ -1,18 +1,29 @@
+import logging
+import sys
+import requests
 from sdk import Client
 
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger(__name__)
+
+
 def example():
-    print("Initializing client...\n")
+    logger.info("Initializing client...")
     client = Client()
 
     try:
-        print("Creating library 'Test Library'...")
+        logger.info("Creating library 'Test Library'...")
         library = client.create_library("Test Library")
-        print(f"  --> Library created: {library['id']}\n")
+        logger.info(f"Library created: {library['id']}")
 
-        print("Creating document 'Test Document'...")
-        document = client.create_document(library["id"], "Test Document")
-        print(f"  --> Document created: {document['id']}\n")
+        logger.info("Creating document 'Test Document'...")
+        document = client.create_document(123, "Test Document")
+        logger.info(f"Document created: {document['id']}")
 
         chunks = [
             "Python is a popular programming language for Data Science",
@@ -21,31 +32,37 @@ def example():
             "France is a country in Europe",
         ]
 
-        print("Creating chunks...")
+        logger.info("Creating chunks...")
         for chunk in chunks:
             client.create_chunk(document["id"], chunk)
-        print(f"  --> {len(chunks)} chunks created\n")
+        logger.info(f"{len(chunks)} chunks created")
 
-        print("Indexing library...")
+        logger.info("Indexing library...")
         res = client.index_library(library["id"])
-        print(f"  --> Library indexed: {res['message']}\n")
+        logger.info(f"Library indexed: {res['message']}")
 
         query = "coding"
-        print(f"Semantic search for: {query}")
+        logger.info(f"Semantic search for: {query}")
         results = client.search_library(library["id"], query, k=4, search_type="knn")
         for result in results:
-            print(f"  --> {result['chunk']['text']} (Score: {result['score']})")
+            logger.info(f"Result: {result['chunk']['text']} (Score: {result['score']})")
 
         query = "Paris, France"
-        print(f"\nKeyword search for: {query}")
+        logger.info(f"Keyword search for: {query}")
         results = client.search_library(
             library["id"], query, k=3, search_type="keyword"
         )
         for result in results:
-            print(f"  --> {result['chunk']['text']} (Match score: {result['score']})")
+            logger.info(
+                f"Result: {result['chunk']['text']} (Match score: {result['score']})"
+            )
 
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request failed: {e}")
+        sys.exit(1)
     except Exception as e:
-        print(f"Error: {e}")
+        logger.exception(f"Unexpected error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
