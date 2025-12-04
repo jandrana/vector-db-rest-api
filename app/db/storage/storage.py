@@ -26,5 +26,12 @@ class Storage(IStorage):
             for line in f:
                 if not line.strip():
                     continue
-                log = json.loads(line)
-                yield log["action"], log["data"]
+                remaining = line.strip()
+                while remaining:
+                    try:
+                        decoder = json.JSONDecoder()
+                        log, idx = decoder.raw_decode(remaining)
+                        yield log["action"], log["data"]
+                        remaining = remaining[idx:].lstrip()
+                    except json.JSONDecodeError as e:
+                        break
