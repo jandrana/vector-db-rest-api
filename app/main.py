@@ -1,7 +1,8 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.core.config import get_settings
-from app.core.events import create_startup_handler
+from app.core.container import DIContainer
 from app.core.exceptions import DatabaseError, ValidationError, get_http_status_code
 from app.api.routes import library, document, chunk, search
 
@@ -23,17 +24,24 @@ async def validation_error_handler(
     )
 
 
-def get_application() -> FastAPI:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application startup."""
     settings = get_settings()
+    try:
+        app.state.container = DIContainer(settings)
+    except Exception as e:
+        app.state.startup_error = e
+    
+    yield
 
+
+def get_application() -> FastAPI:
     application = FastAPI(
         title="Vector DB API",
         description="Vector database API with embedding support",
         version="1.0.0",
-    )
-
-    application.add_event_handler(
-        "startup", create_startup_handler(application, settings)
+        lifespan=lifespan,
     )
 
     application.add_exception_handler(ValidationError, validation_error_handler)
