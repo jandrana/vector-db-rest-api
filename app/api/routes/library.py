@@ -70,5 +70,5 @@ def update_library(
 def delete_library(
     library_id: int,
     service: LibraryService = Depends(deps.get_library_service),
-):
+) -> None:
     service.delete_library(library_id)

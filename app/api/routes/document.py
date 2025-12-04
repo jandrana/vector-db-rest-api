@@ -71,5 +71,5 @@ def update_document(
 def delete_document(
     document_id: int,
     service: DocumentService = Depends(deps.get_document_service),
-):
+) -> None:
     service.delete_document(document_id)

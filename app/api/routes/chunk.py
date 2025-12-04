@@ -78,5 +78,5 @@ def update_chunk(
 def delete_chunk(
     chunk_id: int,
     service: ChunkService = Depends(deps.get_chunk_service),
-):
+) -> None:
     service.delete_chunk(chunk_id)

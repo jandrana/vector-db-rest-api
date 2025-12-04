@@ -49,21 +49,25 @@ class ChunkService(IChunkService):
     @chunk_exists
     def update_chunk(self, chunk_id: int, chunk: ChunkUpdate) -> Chunk:
         if chunk.document_id is not None:
-            if not self._document_repository.get(chunk.document_id):
+            document = self._document_repository.get(chunk.document_id)
+            if document is None:
                 raise EntityNotFoundError.document(chunk.document_id)
 
         existing_chunk = self._chunk_repository.get(chunk_id)
         if existing_chunk is None:
             raise EntityNotFoundError.chunk(chunk_id)
-        old_text = existing_chunk.text
 
+        old_text = existing_chunk.text
         embedding_to_set = existing_chunk.embedding
+
         if chunk.text is not None and old_text and chunk.text != old_text:
             embedding_to_set = None
             self._inverted_index.remove_chunk(chunk_id, old_text)
             self._inverted_index.index_chunk(chunk_id, chunk.text)
+
         if chunk.embedding is not None:
             embedding_to_set = chunk.embedding
+
         updated = self._chunk_repository.update(
             chunk_id, chunk.text, chunk.document_id, embedding_to_set
         )
