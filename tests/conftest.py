@@ -5,13 +5,14 @@ import tempfile
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import get_application
-from app.core.container import DIContainer
-from app.core.config import Settings
-
+# Add project root to Python path before importing app modules
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
+
+from app.main import get_application
+from app.core.container import DIContainer
+from app.core.config import Settings
 
 os.environ.setdefault("COHERE_API_KEY", "test")
 
