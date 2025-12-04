@@ -3,8 +3,8 @@ from typing import List
 
 from app.schemas.search import SearchRequest, SearchResult, IndexResponse
 from app.api import deps
-from app.services.search.search_service import SearchService
-from app.services.index_service import IndexService
+from app.interfaces.services.search_service import ISearchService
+from app.interfaces.services.index_service import IIndexService
 
 router = APIRouter()
 
@@ -17,7 +17,7 @@ router = APIRouter()
 )
 def index_library(
     lib_id: int,
-    service: IndexService = Depends(deps.get_index_service),
+    service: IIndexService = Depends(deps.get_index_service),
 ) -> IndexResponse:
     result = service.index_library(lib_id)
     return IndexResponse(**result)
@@ -32,6 +32,6 @@ def index_library(
 def search_library(
     lib_id: int,
     request: SearchRequest,
-    service: SearchService = Depends(deps.get_search_service),
+    service: ISearchService = Depends(deps.get_search_service),
 ) -> List[SearchResult]:
     return service.search(request.search_type, lib_id, request.query, request.k)

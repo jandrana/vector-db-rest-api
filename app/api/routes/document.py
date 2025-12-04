@@ -8,7 +8,7 @@ from app.schemas.document import (
     DocumentDetail,
 )
 from app.api import deps
-from app.services.document_service import DocumentService
+from app.interfaces.services.document_service import IDocumentService
 
 router = APIRouter()
 
@@ -21,9 +21,10 @@ router = APIRouter()
 )
 def create_document(
     document: DocumentCreate,
-    service: DocumentService = Depends(deps.get_document_service),
+    service: IDocumentService = Depends(deps.get_document_service),
 ) -> DocumentResponse:
-    return service.create_document(document)
+    created_document = service.create_document(document)
+    return DocumentResponse.model_validate(created_document.model_dump())
 
 
 @router.get(
@@ -34,7 +35,7 @@ def create_document(
 )
 def get_document(
     document_id: int,
-    service: DocumentService = Depends(deps.get_document_service),
+    service: IDocumentService = Depends(deps.get_document_service),
 ) -> DocumentDetail:
     return service.get_document_with_details(document_id)
 
@@ -45,8 +46,9 @@ def get_document(
     status_code=status.HTTP_200_OK,
     description="Get all documents",
 )
-def get_all_documents(service: DocumentService = Depends(deps.get_document_service)) -> List[DocumentResponse]:
-    return service.get_all_documents()
+def get_all_documents(service: IDocumentService = Depends(deps.get_document_service)) -> List[DocumentResponse]:
+    documents = service.get_all_documents()
+    return [DocumentResponse.model_validate(doc.model_dump()) for doc in documents]
 
 
 @router.patch(
@@ -58,9 +60,10 @@ def get_all_documents(service: DocumentService = Depends(deps.get_document_servi
 def update_document(
     document_id: int,
     document: DocumentUpdate,
-    service: DocumentService = Depends(deps.get_document_service),
+    service: IDocumentService = Depends(deps.get_document_service),
 ) -> DocumentResponse:
-    return service.update_document(document_id, document)
+    updated_document = service.update_document(document_id, document)
+    return DocumentResponse.model_validate(updated_document.model_dump())
 
 
 @router.delete(
@@ -70,6 +73,6 @@ def update_document(
 )
 def delete_document(
     document_id: int,
-    service: DocumentService = Depends(deps.get_document_service),
+    service: IDocumentService = Depends(deps.get_document_service),
 ) -> None:
     service.delete_document(document_id)

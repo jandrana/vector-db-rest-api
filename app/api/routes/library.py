@@ -8,7 +8,7 @@ from app.schemas.library import (
     LibraryDetail,
 )
 from app.api import deps
-from app.services.library_service import LibraryService
+from app.interfaces.services.library_service import ILibraryService
 
 router = APIRouter()
 
@@ -20,9 +20,10 @@ router = APIRouter()
     description="Create a new library",
 )
 def create_library(
-    library: LibraryCreate, service: LibraryService = Depends(deps.get_library_service)
+    library: LibraryCreate, service: ILibraryService = Depends(deps.get_library_service)
 ) -> LibraryResponse:
-    return service.create_library(library)
+    created_library = service.create_library(library)
+    return LibraryResponse.model_validate(created_library.model_dump())
 
 
 @router.get(
@@ -33,7 +34,7 @@ def create_library(
 )
 def get_library(
     library_id: int,
-    service: LibraryService = Depends(deps.get_library_service),
+    service: ILibraryService = Depends(deps.get_library_service),
 ) -> LibraryDetail:
     return service.get_library_with_details(library_id)
 
@@ -44,8 +45,9 @@ def get_library(
     status_code=status.HTTP_200_OK,
     description="Get all libraries",
 )
-def get_all_libraries(service: LibraryService = Depends(deps.get_library_service)) -> List[LibraryResponse]:
-    return service.get_all_libraries()
+def get_all_libraries(service: ILibraryService = Depends(deps.get_library_service)) -> List[LibraryResponse]:
+    libraries = service.get_all_libraries()
+    return [LibraryResponse.model_validate(lib.model_dump()) for lib in libraries]
 
 
 @router.patch(
@@ -57,9 +59,10 @@ def get_all_libraries(service: LibraryService = Depends(deps.get_library_service
 def update_library(
     library_id: int,
     library: LibraryUpdate,
-    service: LibraryService = Depends(deps.get_library_service),
+    service: ILibraryService = Depends(deps.get_library_service),
 ) -> LibraryResponse:
-    return service.update_library(library_id, library)
+    updated_library = service.update_library(library_id, library)
+    return LibraryResponse.model_validate(updated_library.model_dump())
 
 
 @router.delete(
@@ -69,6 +72,6 @@ def update_library(
 )
 def delete_library(
     library_id: int,
-    service: LibraryService = Depends(deps.get_library_service),
+    service: ILibraryService = Depends(deps.get_library_service),
 ) -> None:
     service.delete_library(library_id)
