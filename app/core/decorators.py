@@ -16,6 +16,20 @@ def _get_param_value(param_name: str, args: tuple, kwargs: dict, func: Callable)
         if param_index < len(args):
             return args[param_index]
     
+    for param_name_key, param_value in zip(param_names, args):
+        if param_value is not None:
+            sentinel = object()
+            value = getattr(param_value, param_name, sentinel)
+            if value is not sentinel:
+                return value
+    
+    for param_value in kwargs.values():
+        if param_value is not None:
+            sentinel = object()
+            value = getattr(param_value, param_name, sentinel)
+            if value is not sentinel:
+                return value
+    
     return None
 
 
