@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, status, Depends
 from typing import List
 
 from app.schemas.library import (
@@ -7,56 +7,81 @@ from app.schemas.library import (
     LibraryResponse,
     LibraryDetail,
 )
+from app.schemas.document import DocumentResponse
 from app.api import deps
-from app.db.database import Database
+from app.services.library_service import LibraryService
+from app.services.document_service import DocumentService
 
 router = APIRouter()
 
 
-@router.post("/", response_model=LibraryResponse, status_code=status.HTTP_201_CREATED)
-def create_library(library: LibraryCreate, db: Database = Depends(deps.get_db)):
-    return db.create_library(library)
+@router.post(
+    "/",
+    response_model=LibraryResponse,
+    status_code=status.HTTP_201_CREATED,
+    description="Create a new library",
+)
+def create_library(
+    library: LibraryCreate, service: LibraryService = Depends(deps.get_library_service)
+):
+    return service.create_library(library)
 
 
 @router.get(
-    "/{library_id}", response_model=LibraryDetail, status_code=status.HTTP_200_OK
+    "/{library_id}",
+    response_model=LibraryDetail,
+    status_code=status.HTTP_200_OK,
+    description="Get a library by ID with all its documents",
 )
-def get_library(library_id: int, db: Database = Depends(deps.get_db)):
-    lib = db.get_library(library_id)
-    if not lib:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Library not found"
+def get_library(
+    library_id: int,
+    library_service: LibraryService = Depends(deps.get_library_service),
+    document_service: DocumentService = Depends(deps.get_document_service),
+):
+    library = library_service.get_library(library_id)
+    documents = document_service.get_documents_by_library(library_id)
+    document_responses = [
+        DocumentResponse(
+            id=doc.id,
+            name=doc.name,
+            library_id=doc.library_id,
         )
+        for doc in documents
+    ]
+    return {**library.model_dump(), "documents": document_responses}
 
-    documents = db.get_documents_by_library(library_id)
 
-    return {"id": lib.id, "name": lib.name, "documents": documents}
-
-
-@router.get("/", response_model=List[LibraryResponse], status_code=status.HTTP_200_OK)
-def get_all_libraries(db: Database = Depends(deps.get_db)):
-    return list(db.libraries.values())
+@router.get(
+    "/",
+    response_model=List[LibraryResponse],
+    status_code=status.HTTP_200_OK,
+    description="Get all libraries",
+)
+def get_all_libraries(service: LibraryService = Depends(deps.get_library_service)):
+    return service.get_all_libraries()
 
 
 @router.patch(
-    "/{library_id}", response_model=LibraryResponse, status_code=status.HTTP_200_OK
+    "/{library_id}",
+    response_model=LibraryResponse,
+    status_code=status.HTTP_200_OK,
+    description="Update a library by ID",
 )
 def update_library(
-    library_id: int, library: LibraryUpdate, db: Database = Depends(deps.get_db)
+    library_id: int,
+    library: LibraryUpdate,
+    service: LibraryService = Depends(deps.get_library_service),
 ):
-    updated_lib = db.update_library(library_id, library)
-    if not updated_lib:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Library not found"
-        )
-    return updated_lib
+    return service.update_library(library_id, library)
 
 
-@router.delete("/{library_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_library(library_id: int, db: Database = Depends(deps.get_db)):
-    res = db.delete_library(library_id)
-    if res == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Library not found"
-        )
-    return None
+@router.delete(
+    "/{library_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Delete a library by ID",
+)
+def delete_library(
+    library_id: int,
+    service: LibraryService = Depends(deps.get_library_service),
+):
+    service.delete_library(library_id)

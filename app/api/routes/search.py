@@ -1,37 +1,49 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List, Dict, Any
+from fastapi import APIRouter, status, Depends
+from typing import List
 
-from app.schemas.search import SearchRequest, SearchResult
-from app.services import search_service, index_service
+from app.schemas.search import SearchRequest, SearchResult, IndexResponse
+from app.schemas.chunk import ChunkResponse
 from app.api import deps
-from app.db.database import Database
+from app.services.search.search_service import SearchService
+from app.services.index_service import IndexService
 
 router = APIRouter()
 
 
-@router.post("/libraries/{lib_id}/index", status_code=status.HTTP_200_OK)
-def index_library(lib_id: int, db: Database = Depends(deps.get_db)) -> Dict[str, Any]:
-    if not db.get_library(lib_id):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Library not found"
-        )
-
-    return index_service.index_library(db, lib_id)
+@router.post(
+    "/libraries/{lib_id}/index",
+    response_model=IndexResponse,
+    status_code=status.HTTP_200_OK,
+    description="Index all chunks in a library by generating embeddings for chunks without them",
+)
+def index_library(
+    lib_id: int,
+    service: IndexService = Depends(deps.get_index_service),
+) -> IndexResponse:
+    result = service.index_library(lib_id)
+    return IndexResponse(**result)
 
 
 @router.post(
     "/libraries/{lib_id}/search",
     response_model=List[SearchResult],
     status_code=status.HTTP_200_OK,
+    description="Search a library using either keyword or k-NN vector search",
 )
 def search_library(
-    lib_id: int, request: SearchRequest, db: Database = Depends(deps.get_db)
+    lib_id: int,
+    request: SearchRequest,
+    service: SearchService = Depends(deps.get_search_service),
 ) -> List[SearchResult]:
-    if not db.get_library(lib_id):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Library not found"
+    results = service.search(request.search_type, lib_id, request.query, request.k)
+    return [
+        SearchResult(
+            score=result["score"],
+            chunk=ChunkResponse(
+                id=result["chunk"].id,
+                text=result["chunk"].text,
+                document_id=result["chunk"].document_id,
+            ),
         )
-
-    if request.search_type == "keyword":
-        return search_service.search_keyword(db, request.query, request.k)
-    return search_service.knn_search(db, lib_id, request.query, request.k)
+        for result in results
+    ]

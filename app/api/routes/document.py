@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, status, Depends
 from typing import List
 
 from app.schemas.document import (
@@ -7,66 +7,82 @@ from app.schemas.document import (
     DocumentResponse,
     DocumentDetail,
 )
+from app.schemas.chunk import ChunkResponse
 from app.api import deps
-from app.db.database import Database
+from app.services.document_service import DocumentService
+from app.services.chunk_service import ChunkService
 
 router = APIRouter()
 
 
-@router.post("/", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
-def create_document(document: DocumentCreate, db: Database = Depends(deps.get_db)):
-    if not db.get_library(document.library_id):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Library with id {document.library_id} not found",
-        )
-    return db.create_document(document)
+@router.post(
+    "/",
+    response_model=DocumentResponse,
+    status_code=status.HTTP_201_CREATED,
+    description="Create a new document in a library",
+)
+def create_document(
+    document: DocumentCreate,
+    service: DocumentService = Depends(deps.get_document_service),
+):
+    return service.create_document(document)
 
 
 @router.get(
-    "/{document_id}", response_model=DocumentDetail, status_code=status.HTTP_200_OK
+    "/{document_id}",
+    response_model=DocumentDetail,
+    status_code=status.HTTP_200_OK,
+    description="Get a document by ID with all its chunks",
 )
-def get_document(document_id: int, db: Database = Depends(deps.get_db)):
-    doc = db.get_document(document_id)
-    if not doc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+def get_document(
+    document_id: int,
+    document_service: DocumentService = Depends(deps.get_document_service),
+    chunk_service: ChunkService = Depends(deps.get_chunk_service),
+):
+    document = document_service.get_document(document_id)
+    chunks = chunk_service.get_chunks_by_document(document_id)
+    chunk_responses = [
+        ChunkResponse(
+            id=chunk.id,
+            text=chunk.text,
+            document_id=chunk.document_id,
         )
-
-    chunks = db.get_chunks_by_document(document_id)
-
-    return {
-        "id": doc.id,
-        "name": doc.name,
-        "library_id": doc.library_id,
-        "chunks": chunks,
-    }
+        for chunk in chunks
+    ]
+    return {**document.model_dump(), "chunks": chunk_responses}
 
 
-@router.get("/", response_model=List[DocumentResponse], status_code=status.HTTP_200_OK)
-def get_all_documents(db: Database = Depends(deps.get_db)):
-    return list(db.documents.values())
+@router.get(
+    "/",
+    response_model=List[DocumentResponse],
+    status_code=status.HTTP_200_OK,
+    description="Get all documents",
+)
+def get_all_documents(service: DocumentService = Depends(deps.get_document_service)):
+    return service.get_all_documents()
 
 
 @router.patch(
-    "/{document_id}", response_model=DocumentResponse, status_code=status.HTTP_200_OK
+    "/{document_id}",
+    response_model=DocumentResponse,
+    status_code=status.HTTP_200_OK,
+    description="Update a document by ID",
 )
 def update_document(
-    document_id: int, document: DocumentUpdate, db: Database = Depends(deps.get_db)
+    document_id: int,
+    document: DocumentUpdate,
+    service: DocumentService = Depends(deps.get_document_service),
 ):
-    updated_doc = db.update_document(document_id, document)
-    if not updated_doc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
-        )
-    return updated_doc
+    return service.update_document(document_id, document)
 
 
-@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_document(document_id: int, db: Database = Depends(deps.get_db)):
-    res = db.delete_document(document_id)
-    if res == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
-        )
-    return None
+@router.delete(
+    "/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Delete a document by ID",
+)
+def delete_document(
+    document_id: int,
+    service: DocumentService = Depends(deps.get_document_service),
+):
+    service.delete_document(document_id)

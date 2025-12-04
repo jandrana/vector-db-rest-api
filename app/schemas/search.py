@@ -15,3 +15,9 @@ class SearchRequest(BaseModel):
         default="knn",
         description="Search type: 'keyword' for exact word matches, 'knn' for similarity search",
     )
+
+
+class IndexResponse(BaseModel):
+    status: str = Field(..., description="Indexing status")
+    message: str = Field(..., description="Status message")
+    chunks_indexed: int = Field(..., ge=0, description="Number of chunks indexed")
