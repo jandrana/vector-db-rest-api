@@ -57,11 +57,21 @@ class ValidationError(ServiceError):
         self.value = value
 
 
+class EmbeddingProviderError(ServiceError):
+    def __init__(self, message: str, provider: str = None, details: dict = None):
+        if provider:
+            message = f"Embedding provider error ({provider}): {message}"
+        super().__init__(message, details)
+        self.provider = provider
+
+
 def get_http_status_code(exception: DatabaseError) -> int:
     if isinstance(exception, EntityNotFoundError):
         return status.HTTP_404_NOT_FOUND
     elif isinstance(exception, ValidationError):
         return status.HTTP_422_UNPROCESSABLE_CONTENT
+    elif isinstance(exception, EmbeddingProviderError):
+        return status.HTTP_502_BAD_GATEWAY
     elif isinstance(exception, ServiceError):
         return status.HTTP_400_BAD_REQUEST
     elif isinstance(exception, RepositoryError):
