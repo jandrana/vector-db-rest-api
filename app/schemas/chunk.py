@@ -11,7 +11,7 @@ class ChunkCreate(ChunkBase):
     embedding: Optional[List[float]] = Field(None, description="Embedding of the chunk")
 
 
-class ChunkUpdate(ChunkBase):
+class ChunkUpdate(BaseModel):
     text: Optional[str] = Field(None, description="New text of the chunk")
     document_id: Optional[int] = Field(None, description="New document ID")
     embedding: Optional[List[float]] = Field(

@@ -11,7 +11,7 @@ class LibraryCreate(LibraryBase):
     pass
 
 
-class LibraryUpdate(LibraryBase):
+class LibraryUpdate(BaseModel):
     name: Optional[str] = Field(None, description="New library name")
 
 

@@ -12,7 +12,7 @@ class DocumentCreate(DocumentBase):
     pass
 
 
-class DocumentUpdate(DocumentBase):
+class DocumentUpdate(BaseModel):
     name: Optional[str] = Field(None, description="New document name")
 
 
