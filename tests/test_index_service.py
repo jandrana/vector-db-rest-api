@@ -5,12 +5,11 @@ from app.schemas.chunk import ChunkCreate
 
 def test_index_library_assigns_embeddings(test_container):
     """Test that indexing a library assigns embeddings to chunks."""
-    library_service = test_container.library_service
-    document_service = test_container.document_service
-    chunk_service = test_container.chunk_service
-    index_service = test_container.index_service
+    library_service = test_container.services.library_service()
+    document_service = test_container.services.document_service()
+    chunk_service = test_container.services.chunk_service()
+    index_service = test_container.services.index_service()
 
-    # Create library, document and chunks
     lib = library_service.create_library(LibraryCreate(name="lib1"))
     doc = document_service.create_document(
         DocumentCreate(name="doc1", library_id=lib.id)
