@@ -188,7 +188,6 @@ class DIContainer:
                 storage={},
                 id_generator=self.id_generator,
                 persistence_manager=self.persistence,
-                inverted_index=self.inverted_index,
                 document_repository=self.document_repository,
                 lock=threading.RLock(),
             )
@@ -263,6 +262,7 @@ class DIContainer:
                 chunk_repository=self.chunk_repository,
                 document_repository=self.document_repository,
                 library_repository=self.library_repository,
+                inverted_index=self.inverted_index,
             )
         return self._chunk_service
 

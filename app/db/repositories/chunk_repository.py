@@ -5,7 +5,6 @@ from app.interfaces.repositories.chunk_repository import IChunkRepository
 from app.interfaces.repositories.replayable_repository import IReplayableRepository
 from app.interfaces.id_generation import IIdGenerator
 from app.interfaces.persistence import IPersistenceManager
-from app.interfaces.indexing import IInvertedIndex
 from app.interfaces.repositories.document_repository import IDocumentRepository
 
 ReplayHandler = Callable[[str, Dict[str, Any]], None]
@@ -17,14 +16,12 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
         storage: Dict[int, Chunk],
         id_generator: IIdGenerator,
         persistence_manager: IPersistenceManager,
-        inverted_index: IInvertedIndex,
         document_repository: IDocumentRepository,
         lock: threading.RLock,
     ):
         self.chunks: Dict[int, Chunk] = storage
         self.id_generator = id_generator
         self.persistence_manager = persistence_manager
-        self.inverted_index = inverted_index
         self.document_repository = document_repository
         self.lock = lock
         self._replay_mode = False
@@ -86,9 +83,8 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
             self.chunks[new_id] = new_chunk
             if disk_id is not None:
                 self.id_generator.set_chunk_id(disk_id)
-            self.inverted_index.index_chunk(new_id, text)
             if not self._replay_mode:
-                    self._persist(
+                self._persist(
                     "create_chunk",
                     {
                         "id": new_id,
@@ -111,18 +107,14 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
             chunk = self.get(chunk_id)
             if not chunk:
                 return None
-            old_text = chunk.text
             if text is not None:
                 chunk.text = text
             if document_id is not None:
                 chunk.document_id = document_id
             if embedding is not None:
                 chunk.embedding = embedding
-            if text is not None and text != old_text:
-                self.inverted_index.remove_chunk(chunk_id, old_text)
-                self.inverted_index.index_chunk(chunk_id, text)
             if not self._replay_mode:
-                    self._persist(
+                self._persist(
                     "update_chunk",
                     {
                         "id": chunk_id,
@@ -137,8 +129,6 @@ class ChunkRepository(IChunkRepository, IReplayableRepository):
         with self.lock:
             if chunk_id not in self.chunks:
                 return 0
-            chunk = self.chunks[chunk_id]
-            self.inverted_index.remove_chunk(chunk_id, chunk.text)
             del self.chunks[chunk_id]
             if not self._replay_mode:
                 self._persist("delete_chunk", {"id": chunk_id})
