@@ -53,7 +53,9 @@ class ChunkService(IChunkService):
                 raise EntityNotFoundError.document(chunk.document_id)
 
         existing_chunk = self._chunk_repository.get(chunk_id)
-        old_text = existing_chunk.text if existing_chunk else None
+        if existing_chunk is None:
+            raise EntityNotFoundError.chunk(chunk_id)
+        old_text = existing_chunk.text
 
         updated = self._chunk_repository.update(
             chunk_id, chunk.text, chunk.document_id, chunk.embedding
