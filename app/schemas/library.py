@@ -19,7 +19,8 @@ class LibraryResponse(LibraryBase):
     id: int
 
 
-class LibraryDetail(LibraryResponse):
+class LibraryDetail(LibraryBase):
+    id: int
     documents: List[DocumentResponse] = Field(
         ..., description="List of documents in the library"
     )

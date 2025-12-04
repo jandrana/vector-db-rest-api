@@ -21,6 +21,7 @@ class DocumentResponse(DocumentBase):
 
 
 class DocumentDetail(DocumentBase):
+    id: int
     chunks: List[ChunkResponse] = Field(
         ..., description="List of chunks in the document"
     )

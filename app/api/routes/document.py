@@ -7,10 +7,8 @@ from app.schemas.document import (
     DocumentResponse,
     DocumentDetail,
 )
-from app.schemas.chunk import ChunkResponse
 from app.api import deps
 from app.services.document_service import DocumentService
-from app.services.chunk_service import ChunkService
 
 router = APIRouter()
 
@@ -36,20 +34,9 @@ def create_document(
 )
 def get_document(
     document_id: int,
-    document_service: DocumentService = Depends(deps.get_document_service),
-    chunk_service: ChunkService = Depends(deps.get_chunk_service),
+    service: DocumentService = Depends(deps.get_document_service),
 ):
-    document = document_service.get_document(document_id)
-    chunks = chunk_service.get_chunks_by_document(document_id)
-    chunk_responses = [
-        ChunkResponse(
-            id=chunk.id,
-            text=chunk.text,
-            document_id=chunk.document_id,
-        )
-        for chunk in chunks
-    ]
-    return {**document.model_dump(), "chunks": chunk_responses}
+    return service.get_document_with_details(document_id)
 
 
 @router.get(

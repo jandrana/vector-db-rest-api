@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 from app.db.models import Library
-from app.schemas.library import LibraryCreate, LibraryUpdate
+from app.schemas.library import LibraryCreate, LibraryUpdate, LibraryDetail
 
 
 class ILibraryReader(ABC):
@@ -12,6 +12,10 @@ class ILibraryReader(ABC):
     # add page_size, page -> Tuple[List[Library], int, int]
     @abstractmethod
     def get_all_libraries(self) -> List[Library]:
+        pass
+
+    @abstractmethod
+    def get_library_with_details(self, library_id: int) -> LibraryDetail:
         pass
 
 

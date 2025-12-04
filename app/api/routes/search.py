@@ -2,7 +2,6 @@ from fastapi import APIRouter, status, Depends
 from typing import List
 
 from app.schemas.search import SearchRequest, SearchResult, IndexResponse
-from app.schemas.chunk import ChunkResponse
 from app.api import deps
 from app.services.search.search_service import SearchService
 from app.services.index_service import IndexService
@@ -35,15 +34,4 @@ def search_library(
     request: SearchRequest,
     service: SearchService = Depends(deps.get_search_service),
 ) -> List[SearchResult]:
-    results = service.search(request.search_type, lib_id, request.query, request.k)
-    return [
-        SearchResult(
-            score=result["score"],
-            chunk=ChunkResponse(
-                id=result["chunk"].id,
-                text=result["chunk"].text,
-                document_id=result["chunk"].document_id,
-            ),
-        )
-        for result in results
-    ]
+    return service.search(request.search_type, lib_id, request.query, request.k)

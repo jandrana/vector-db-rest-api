@@ -5,7 +5,8 @@ from app.interfaces.repositories.chunk_repository import IChunkRepository
 from app.interfaces.repositories.library_repository import ILibraryRepository
 from app.core.exceptions import EntityNotFoundError
 from app.db.models import Document
-from app.schemas.document import DocumentCreate, DocumentUpdate
+from app.schemas.document import DocumentCreate, DocumentUpdate, DocumentDetail
+from app.schemas.chunk import ChunkResponse
 
 
 class DocumentService(IDocumentService):
@@ -37,6 +38,24 @@ class DocumentService(IDocumentService):
 
     def get_all_documents(self) -> List[Document]:
         return self._document_repository.get_all()
+
+    def get_document_with_details(self, document_id: int) -> DocumentDetail:
+        document = self.get_document(document_id)
+        chunks = self._chunk_repository.get_by_document(document_id)
+        chunk_responses = [
+            ChunkResponse(
+                id=chunk.id,
+                text=chunk.text,
+                document_id=chunk.document_id,
+            )
+            for chunk in chunks
+        ]
+        return DocumentDetail(
+            id=document.id,
+            name=document.name,
+            library_id=document.library_id,
+            chunks=chunk_responses,
+        )
 
     def create_document(self, document: DocumentCreate) -> Document:
         self._validate_library_exists(document.library_id)
