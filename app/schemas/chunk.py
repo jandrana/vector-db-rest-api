@@ -8,7 +8,7 @@ class ChunkBase(BaseModel):
 
 
 class ChunkCreate(ChunkBase):
-    embedding: Optional[List[float]] = Field(None, description="Embedding of the chunk")
+    pass
 
 
 class ChunkUpdate(BaseModel):
