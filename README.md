@@ -62,9 +62,15 @@ vector-db-rest-api/
 │   │   └── storage/                  # Persistence Layer (AOL Pattern)
 │   ├── schemas/                      # 📋 Pydantic Schemas (DTOs & Validation)
 │   ├── services/                     # 🧠 Business Logic Layer
+<<<<<<< HEAD
+│   │   ├── containers.py             # ServiceContainer (DI for services)
+│   │   ├── chunk_service.py          # ChunkService (business logic)
+│   │   ├── document_service.py       # DocumentService
+=======
 │   │   ├── containers.py            # ServiceContainer (DI for services)
 │   │   ├── chunk_service.py          # ChunkService (business logic)
 │   │   ├── document_service.py      # DocumentService
+>>>>>>> main
 │   │   ├── library_service.py        # LibraryService
 │   │   ├── index_service.py          # IndexService (embedding generation)
 │   │   ├── embedding/                # Embedding Service
