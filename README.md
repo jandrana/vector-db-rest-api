@@ -12,38 +12,91 @@ It allows users to create libraries, upload text documents, and perform both Sem
 *   **Dockerized:** Project containerization with Docker.
 *   **Setup:** Automated setup via `Makefile`.
 
+## 🏗️ Code Quality & Architecture
+
+### SOLID Principles
+*   **SRP:** Clear separation - API routes (HTTP), Services (business logic), Repositories (data access)
+*   **OCP:** Extensible via Strategy pattern.
+*   **LSP:** All repositories/services implement interfaces (`IChunkRepository`, `ISearchService`, etc.)
+*   **ISP:** Focused interfaces in `app/interfaces/`. No forced dependencies
+*   **DIP:** Dependency injection via `dependency-injector` containers. Services depend on interfaces
+
+### Domain-Driven Design
+*   **Multi-Layer Architecture:** API → Services → Repositories → Storage
+*   **Repository Pattern:** Data access abstracted through interfaces
+*   **Service Layer:** Business logic separated from data access
+
+### Design Patterns
+*   **Strategy Pattern:** Pluggable search strategies (`KnnSearchStrategy`, `KeywordSearchStrategy`)
+*   **Repository Pattern:** Data access abstraction via interfaces
+*   **Decorator Pattern:** Validation decorators (`@library_exists`, `@document_exists`, `@chunk_exists`)
+
+### Code Quality
+*   **No Hardcoded Values:** Configuration via Pydantic Settings
+*   **Thread Safety:** `RLock` in repository methods
+
 ## 📁 Project Structure
 
-Following a Domain Driven Design inspired structure, separating the code in different logical layers.
+Following a Domain-Driven Design (DDD) inspired structure with strict separation of concerns across three layers: API, Services, and Repositories. The architecture uses dependency injection, interfaces for abstraction, and design patterns for extensibility.
 
 ```text
 vector-db-rest-api/
 ├── app/
-│   ├── api/                  # 🗣️ Interface
-│   │   ├── routes/           # API Endpoints
-│   │   └── deps.py           # Dependency Injection (get_db)
-│   ├── core/                 # ⚙️ Core Utilities
-│   │   ├── config.py         # Environment Configuration
-│   │   └── math_utils.py     # Cosine Similarity Logic
-│   ├── db/                   # 💾 Data Layer
-│   │   ├── database.py       # Main Database Controller (Thread-safe)
-│   │   ├── inverted_index.py # Keyword Search Algorithm Logic
-│   │   ├── persistence.py    # Append-Only Log Logic (File I/O)
-│   │   └── models.py         # Internal Data Models
-│   ├── schemas/              # 📋 Data Transfer Objects (DTOs)
-│   │   └── ...               # Pydantic Schemas for Validation
-│   ├── services/             # 🧠 Business Logic Layer
-│   │   ├── index_service.py  # Cohere Embedding Integration
-│   │   └── search_service.py # Search Orchestration
-│   └── main.py               # 🏁 Application Entry Point
-├── client/                   # 📦 Python SDK Client
-│   ├── sdk.py                # Reusable API Client Library
-│   └── example.py            # SDK Usage Demo Script
-├── tests/                    # 🧪 Integration Tests
-├── Makefile                  # 🛠️ Automation Commands
-├── Dockerfile                # 🐳 Docker Configuration
-└── requirements.txt          # 🐍 Dependencies
+│   ├── api/                          # 🗣️ API Layer (HTTP Interface)
+│   │   ├── routes/                   # RESTful API Endpoints
+│   │   └── deps.py                   # FastAPI dependency injection
+│   ├── core/                         # ⚙️ Core Utilities & Configuration
+│   ├── interfaces/                   # 🔌 Interface Definitions (Abstraction Layer)
+│   │   ├── repositories/             # Repository interfaces
+│   │   ├── services/                 # Service interfaces
+│   │   ├── id_generation.py          # IIdGenerator
+│   │   ├── indexing.py               # Indexing interfaces
+│   │   └── persistence.py            # Persistence interfaces
+│   ├── db/                           # 💾 Data Layer (Repository Implementation)
+│   │   ├── containers.py             # DbContainer (DI for data layer)
+│   │   ├── id_generator.py           # ID generation implementation
+│   │   ├── inverted_index.py         # Keyword search index
+│   │   ├── models.py                 # Domain models (Library, Document, Chunk)
+│   │   ├── tokenization.py           # Text tokenization strategy
+│   │   ├── repositories/             # Repository implementations
+│   │   └── storage/                  # Persistence Layer (AOL Pattern)
+│   ├── schemas/                      # 📋 Pydantic Schemas (DTOs & Validation)
+│   ├── services/                     # 🧠 Business Logic Layer
+│   │   ├── containers.py            # ServiceContainer (DI for services)
+│   │   ├── chunk_service.py          # ChunkService (business logic)
+│   │   ├── document_service.py      # DocumentService
+│   │   ├── library_service.py        # LibraryService
+│   │   ├── index_service.py          # IndexService (embedding generation)
+│   │   ├── embedding/                # Embedding Service
+│   │   │   ├── embedding_provider.py # CohereEmbeddingProvider
+│   │   │   └── embedding_service.py      # EmbeddingService
+│   │   └── search/                   # Search Service (Strategy Pattern)
+│   │       ├── search_service.py     # SearchService (strategy registry)
+│   │       └── strategies/           # Search Strategy Implementations
+│   └── main.py                       # 🏁 FastAPI Application Entry Point
+├── client/                           # 📦 Python SDK Client
+│   ├── sdk.py                        # VectorDBClient class
+│   └── example.py                    # SDK usage demonstration
+├── tests/                            # 🧪 Test Suite
+├── workflows/                        # 🤖 n8n Workflow Definitions
+│   └── ai_document_ingestion.json    # AI agent ingestion pipeline
+├── Makefile                          # 🛠️ Automation Commands
+├── Dockerfile                        # 🐳 Docker Configuration
+├── docker-compose.yml                # Docker Compose configuration
+├── requirements.txt                  # 🐍 Production Dependencies
+└── requirements-dev.txt               # Development Dependencies
 ```
+
+### Architecture Flow
+
+**Request Flow:** `HTTP Request → API Route → Service → Repository → Storage`
+
+*   **API Layer:** HTTP handling, Pydantic validation, dependency injection via `Depends()`
+*   **Service Layer:** Business logic, orchestration, decorators for validation
+*   **Repository Layer:** Thread-safe data access (`RLock`), persistence via `PersistenceManager`
+*   **Storage Layer:** Append-Only Log (AOL) pattern for persistence
+
+**Dependency Injection:** Three-tier container system (`AppContainer` → `ServiceContainer` + `DbContainer`) manages all dependencies with lifecycle management via FastAPI's `lifespan` context manager.
 
 ## 🛠️ Quick Start
 
@@ -103,6 +156,10 @@ Interact directly with every endpoint directly from the browser.
 make venv
 # Windows
 .venv\Scripts\activate
+
+# Git Bash (Windows)
+source .venv/Scripts/activate
+
 # Mac/Linux
 source .venv/bin/activate
 
@@ -131,11 +188,14 @@ make test	# uses .venv if available
 python -m pytest
 ```
 
-- This repo runs tests locally using `pytest` via a `pre-push` hook from `pre-commit` and in CI (GitHub Actions). Hooks are installed when runnning `make install-dev` or do it manually using `pre-commit install -t pre-push`.
+### Testing
 
-### CI and pre-push hook
-- CI runs the tests on push and pull requests.
-- Local pre-push hook runs pytest before pushing; Users can bypass it with `git push --no-verify` if needed but CI will block any issues.
+*   **Test Isolation:** Temporary DB files per session using fresh container instances.
+*   **Dependency Injection:** Tests use same DI container system as production (`test_container` fixture)
+*   **Mocking:** External services (Cohere API) stubbed globally to avoid external calls
+*   **Coverage:** API routes, database, services, inverted index, math utils, search strategies
+*   **FastAPI TestClient:** Realistic HTTP testing with response validation
+*   **Pre-commit Hooks:** Automated test execution via `pre-push` hook; CI runs on push/PR
 
 ## 🧠 Challenge Approach: Algorithms & Complexity
 
